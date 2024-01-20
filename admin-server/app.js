@@ -61,12 +61,12 @@ app.use(cors(corsOptions));
 
 //oracle db connection
 const dbConfig = {
-  user: config.USERNAME,
-  password: config.PASSWORD,
-  connectString: config.CONNECTION_STRING,
-  // user: "VENDORPORTAL",
-  // password: "VENDORPORTAL",
-  // connectString: "192.168.14.237:1521/ESTK",
+  // user: config.USERNAME,
+  // password: config.PASSWORD,
+  // connectString: config.CONNECTION_STRING,
+  user: "VENDORPORTAL",
+  password: "VENDORPORTAL",
+  connectString: "192.168.14.237:1521/ESTK",
 };
 
 async function run() {
