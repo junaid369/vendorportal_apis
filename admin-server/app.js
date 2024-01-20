@@ -15,6 +15,9 @@ const cors = require("cors");
 const sitesViewSchema = require("./models/sites_view-model");
 const poHeaderViewSchema = require("./models/po_view-model");
 const poDetailViewSchema = require("./models/po_Detail_view-model");
+const poFooterViewSchema = require("./models/po_footer-modal");
+
+const service = require("./service/Viewreports-service");
 
 //end
 
@@ -95,10 +98,11 @@ async function run() {
       db.once("open", () => {
         //cron job setup
         // Schedule the task to run at 10 AM and 11 PM every day
-        // cron.schedule("0 10,23 * * *", scheduledFunction, poFunction);
         // cron.schedule("* * * * *", scheduledFunction);
-        cron.schedule("13 * * * *", poFunction);
-        cron.schedule("16 * * * *", poDetailFunction);
+        cron.schedule("0 10,23 * * *", scheduledFunction);
+        cron.schedule("0 9,22 * * *", poFunction);
+        cron.schedule("5 9,22 * * *", poDetailFunction);
+        cron.schedule("6 9,22 * * *", poFooterFunction);
 
         //end
         console.log("Connected to MongoDB");
@@ -184,8 +188,8 @@ async function run() {
       const result = await connection.execute(
         "select * from SPAR_PO_Header_View"
       );
-      console.log(result.length,"____________");
-      await connection.close(); // Release the connection back to the pool
+      console.log(result.rows.length, "____________");
+      // await connection.close(); // Release the connection back to the pool
       if (result.rows) {
         const jsonObject = result.rows.reduce((acc, row) => {
           let obj = {
@@ -238,15 +242,18 @@ async function run() {
           //fetch mongodb datas
 
           let exisitingData = await poHeaderViewSchema.find();
+          console.log(exisitingData.length, "---------");
 
           if (exisitingData.length == 0) {
             let insertQuery = await poHeaderViewSchema.insertMany(newData);
             console.log("insert po ");
+            return "Success";
           } else {
             //delet first
             await poHeaderViewSchema.deleteMany({});
             let insertQuery = await poHeaderViewSchema.insertMany(newData);
-            console.log("insert po ");
+            console.log("update po ");
+            return "Success";
           }
         }
       }
@@ -259,9 +266,9 @@ async function run() {
       const result = await connection.execute(
         "select * from SPAR_PO_Detail_View"
       );
-      console.log(result.length,"____________");
+      console.log(result.rows.length, "____________");
 
-      await connection.close(); // Release the connection back to the pool
+      // await connection.close(); // Release the connection back to the pool
       if (result.rows) {
         const jsonObject = result.rows.reduce((acc, row) => {
           let obj = {
@@ -301,16 +308,75 @@ async function run() {
           //fetch mongodb datas
 
           let exisitingData = await poDetailViewSchema.find();
+          console.log(exisitingData.length, "---------");
 
           if (exisitingData.length == 0) {
+            console.log("here");
             let insertQuery = await poDetailViewSchema.insertMany(newData);
             console.log("insert po detail");
+            return "Success";
           } else {
             console.log("update podetail");
 
             //delet first
             await poDetailViewSchema.deleteMany({});
             let insertQuery = await poDetailViewSchema.insertMany(newData);
+            return "Success";
+          }
+        }
+      }
+    };
+    const poFooterFunction = async () => {
+      console.log("inside the footer function");
+
+      let newData = [];
+      //fetch oracle db data and insert those datas into mongodb
+      const result = await connection.execute(
+        "select * from SPAR_PO_Footer_View"
+      );
+
+      // await connection.close(); // Release the connection back to the pool
+      if (result.rows) {
+        const jsonObject = result.rows.reduce((acc, row) => {
+          let obj = {
+            po_No: row[0],
+            po_Int_Code: row[1],
+            glob_Int_Code: row[2],
+            glob_order: row[3],
+            site_Code: row[4],
+            cnt_Articles: row[5],
+            cnt_Pu: row[6],
+            cnt_Sku: row[7],
+            tot_Gross: row[8],
+            tot_Linedisc: row[9],
+            excise_Tax: row[10],
+            footer_Disc: row[11],
+            net_Pval: row[12],
+            landed_Cost: row[13],
+            total_Vat: row[14],
+            total_Amt_W_Vat: row[15],
+          };
+          newData.push(obj);
+        }, {});
+
+        if (newData.length > 0) {
+          //fetch mongodb datas
+
+          let exisitingData = await poFooterViewSchema.find();
+          console.log(exisitingData.length, "---------");
+
+          if (exisitingData.length == 0) {
+            console.log("here");
+            let insertQuery = await poFooterViewSchema.insertMany(newData);
+            console.log("insert po detail");
+            return "Success";
+          } else {
+            console.log("update podetail");
+
+            //delet first
+            await poFooterViewSchema.deleteMany({});
+            let insertQuery = await poFooterViewSchema.insertMany(newData);
+            return "Success";
           }
         }
       }
