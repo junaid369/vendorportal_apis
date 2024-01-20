@@ -14,11 +14,16 @@ module.exports = {
       let po_No = obj.po_No;
       let intSkipCount = parseInt(obj.intSkipCount);
       let intLimitCount = parseInt(obj.intLimitCount);
-      let result = [];
+      let result = [
+        {
+          DetailView: [],
+          footerView: [],
+        },
+      ];
       if (!intLimitCount) {
         return {
           success: false,
-          message: " limit count is missing.",
+          message: "limit count is missing.",
           data: [],
         };
       }
@@ -46,8 +51,8 @@ module.exports = {
               },
             },
           ]);
-          result.detailview = poHeaderView || [];
-          result.footer = footer || [];
+          result[0].DetailView = poHeaderView;
+          result[0].footerView = footer;
 
           return {
             success: true,
