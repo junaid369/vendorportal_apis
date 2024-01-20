@@ -13,6 +13,8 @@ const bodyParser = require("body-parser");
 const cors = require("cors");
 //scema fetch
 const sitesViewSchema = require("./models/sites_view-model");
+const poHeaderViewSchema = require("./models/po_view-model");
+const poDetailViewSchema = require("./models/po_Detail_view-model");
 
 //end
 
@@ -67,6 +69,9 @@ const dbConfig = {
   user: "VENDORPORTAL",
   password: "VENDORPORTAL",
   connectString: "192.168.14.237:1521/ESTK",
+  poolMax: 10, // Maximum number of connections in the pool
+  poolMin: 2, // Minimum number of connections in the pool
+  poolIncrement: 2, // Number of connections to add when needed
 };
 
 async function run() {
@@ -81,8 +86,7 @@ async function run() {
       console.log("Connected to oracleDB");
 
       mongoose.connect(config.CONNECTION_URL, {
-      //  dbName: config.DATABASE_NAME, // Specify the database name here
-
+        //  dbName: config.DATABASE_NAME, // Specify the database name here
         // Other options can be added here based on your requirements
       });
       const db = mongoose.connection;
@@ -91,8 +95,10 @@ async function run() {
       db.once("open", () => {
         //cron job setup
         // Schedule the task to run at 10 AM and 11 PM every day
-        // cron.schedule("0 10,23 * * *", scheduledFunction);
+        // cron.schedule("0 10,23 * * *", scheduledFunction, poFunction);
         // cron.schedule("* * * * *", scheduledFunction);
+        cron.schedule("13 * * * *", poFunction);
+        cron.schedule("16 * * * *", poDetailFunction);
 
         //end
         console.log("Connected to MongoDB");
@@ -110,64 +116,205 @@ async function run() {
       });
     }
     // Your function to be executed
-    // const scheduledFunction = async () => {
-    //   let newData = [];
-    //   //fetch oracle db data and insert those datas into mongodb
-    //   const result = await connection.execute("select * from SPAR_SITES_VIEW");
-    //   await connection.close(); // Release the connection back to the pool
-    //   if (result.rows) {
-    //     const jsonObject = result.rows.reduce((acc, row) => {
-    //       let obj = {
-    //         siteCode: row[0],
-    //         siteName: row[1],
-    //         steCls: row[2],
-    //         siteClass: row[3],
-    //         siteGroup: row[4],
-    //       };
-    //       newData.push(obj);
-    //     }, {});
+    const scheduledFunction = async () => {
+      let newData = [];
+      //fetch oracle db data and insert those datas into mongodb
+      const result = await connection.execute("select * from SPAR_SITES_VIEW");
+      await connection.close(); // Release the connection back to the pool
+      if (result.rows) {
+        const jsonObject = result.rows.reduce((acc, row) => {
+          let obj = {
+            siteCode: row[0],
+            siteName: row[1],
+            steCls: row[2],
+            siteClass: row[3],
+            siteGroup: row[4],
+          };
+          newData.push(obj);
+        }, {});
 
-    //     if (newData.length > 0) {
-    //       //fetch mongodb datas
+        if (newData.length > 0) {
+          //fetch mongodb datas
 
-    //       let exisitingData = await sitesViewSchema.aggregate([
-    //         { $match: {} },
-    //         {
-    //           $project: {
-    //             siteCode: 1,
-    //             siteName: 1,
-    //             steCls: 1,
-    //             siteClass: 1,
-    //             siteGroup: 1,
-    //             _id: 0,
-    //           },
-    //         },
-    //       ]);
+          let exisitingData = await sitesViewSchema.aggregate([
+            { $match: {} },
+            {
+              $project: {
+                siteCode: 1,
+                siteName: 1,
+                steCls: 1,
+                siteClass: 1,
+                siteGroup: 1,
+                _id: 0,
+              },
+            },
+          ]);
 
-    //       if (exisitingData.length == 0) {
-    //         let insertQuery = await sitesViewSchema.insertMany(newData);
-    //       } else {
-    //         newData.forEach(async (obj1) => {
-    //           const obj2 = exisitingData.find(
-    //             (item) => item.siteCode === obj1.siteCode
-    //           );
+          if (exisitingData.length == 0) {
+            let insertQuery = await sitesViewSchema.insertMany(newData);
+          } else {
+            newData.forEach(async (obj1) => {
+              const obj2 = exisitingData.find(
+                (item) => item.siteCode === obj1.siteCode
+              );
 
-    //           if (obj2) {
-    //             if (obj1 == obj2) {
-    //             } else {
-    //               await sitesViewSchema.updateOne(
-    //                 { siteCode: obj1.siteCode },
-    //                 { $set: obj1 }
-    //               );
-    //             }
-    //           } else {
-    //             await sitesViewSchema.create(obj1);
-    //           }
-    //         });
-    //       }
-    //     }
-    //   }
-    // };
+              if (obj2) {
+                if (obj1 == obj2) {
+                } else {
+                  await sitesViewSchema.updateOne(
+                    { siteCode: obj1.siteCode },
+                    { $set: obj1 }
+                  );
+                }
+              } else {
+                await sitesViewSchema.create(obj1);
+              }
+            });
+          }
+        }
+      }
+    };
+
+    // poFunction
+
+    const poFunction = async () => {
+      console.log("inside the po function");
+      let newData = [];
+      //fetch oracle db data and insert those datas into mongodb
+      const result = await connection.execute(
+        "select * from SPAR_PO_Header_View"
+      );
+      console.log(result.length,"____________");
+      await connection.close(); // Release the connection back to the pool
+      if (result.rows) {
+        const jsonObject = result.rows.reduce((acc, row) => {
+          let obj = {
+            po_No: row[0],
+            supp_Name: row[1],
+            po_Int_Code: row[2],
+            glob_order: row[3],
+            site_Code: row[4],
+            ECDCFIN: row[5],
+            supp_No: row[6],
+            comm_Contract: row[7],
+            adress_chain_supp: row[8],
+            po_Comments: row[9],
+            po_Date: row[10],
+            delivery_Date: row[11],
+            delivery_Deadline: row[12],
+            free_Shipping: row[13],
+            address_Chain_Cust: row[14],
+            COMMENT1: row[15],
+            COMMENT2: row[16],
+            comp_Name_Supp: row[17],
+            street1_Supp: row[18],
+            street2_Supp: row[19],
+            postal_Code_Supp: row[20],
+            villa_Supp: row[21],
+            district_Supp: row[22],
+            region_Supp: row[23],
+            country_Supp: row[24],
+            vat_Code_Supp: row[25],
+            comp_Name_Cust: row[26],
+            street1_Cust: row[27],
+            street2_Cust: row[28],
+            postal_Code_Cust: row[29],
+            villa_cust: row[30],
+            district_Cust: row[31],
+            region_Cust: row[32],
+            country_Cust: row[33],
+            vat_Code_Cust: row[34],
+            customer_Number: row[35],
+            po_Article_Sort: row[36],
+            vat_Code_Cust: row[36],
+            po_Status: row[37],
+            exchange_Rate: row[38],
+            CURRENCY: row[39],
+          };
+          newData.push(obj);
+        }, {});
+
+        if (newData.length > 0) {
+          //fetch mongodb datas
+
+          let exisitingData = await poHeaderViewSchema.find();
+
+          if (exisitingData.length == 0) {
+            let insertQuery = await poHeaderViewSchema.insertMany(newData);
+            console.log("insert po ");
+          } else {
+            //delet first
+            await poHeaderViewSchema.deleteMany({});
+            let insertQuery = await poHeaderViewSchema.insertMany(newData);
+            console.log("insert po ");
+          }
+        }
+      }
+    };
+    const poDetailFunction = async () => {
+      console.log("inside the detailpo function");
+
+      let newData = [];
+      //fetch oracle db data and insert those datas into mongodb
+      const result = await connection.execute(
+        "select * from SPAR_PO_Detail_View"
+      );
+      console.log(result.length,"____________");
+
+      await connection.close(); // Release the connection back to the pool
+      if (result.rows) {
+        const jsonObject = result.rows.reduce((acc, row) => {
+          let obj = {
+            po_No: row[0],
+            po_Int_Code: row[1],
+            glob_Int_Code: row[2],
+            glob_order: row[3],
+            site_Code: row[4],
+            prod_Code: row[5],
+            supp_Ref_Code: row[6],
+            BARCODE: row[7],
+            product_Desc: row[8],
+            ou_Type: row[9],
+            LV: row[10],
+            sku_Ou: row[11],
+            weight_Ou: row[12],
+            qty_Ordered_Ou: row[13],
+            free_Qty: row[14],
+            GROSSPRICE: row[15],
+            DISCPERC: row[16],
+            DISCVALUE: row[17],
+            excise_Tax: row[18],
+            NETPRICE: row[19],
+            vat_Perc: row[20],
+            pp_Unit: row[21],
+            NETPVALUE: row[22],
+            CINR: row[23],
+            CINL: row[24],
+            SEQVL: row[25],
+            po_LineNo: row[26],
+            qty_Ordered_Pcs: row[27],
+          };
+          newData.push(obj);
+        }, {});
+
+        if (newData.length > 0) {
+          //fetch mongodb datas
+
+          let exisitingData = await poDetailViewSchema.find();
+
+          if (exisitingData.length == 0) {
+            let insertQuery = await poDetailViewSchema.insertMany(newData);
+            console.log("insert po detail");
+          } else {
+            console.log("update podetail");
+
+            //delet first
+            await poDetailViewSchema.deleteMany({});
+            let insertQuery = await poDetailViewSchema.insertMany(newData);
+          }
+        }
+      }
+    };
   } catch (error) {
     console.error("Error connecting to Oracle:", error);
   }
@@ -175,46 +322,3 @@ async function run() {
 run();
 
 //end
-
-// mongoose.connect(process.env.CONNECTION_URL, {
-//   // Other options can be added here based on your requirements
-// });
-
-// const db = mongoose.connection;
-
-// db.on("error", console.error.bind(console, "MongoDB connection error:"));
-// db.once("open", () => {
-//   console.log("Connected to MongoDB");
-
-//   //   require("./admin_routes")(app, db);
-//   app.use(express.static(path.join(__dirname, "dist")));
-//   // Catch all other routes and return the index file
-//   app.get("*", function (req, res) {
-//     res.sendFile(path.join(__dirname, "dist/index.html"));
-//   });
-//   // Initialize the app
-//   let server = app.listen(process.env.PORT || 3001, function () {
-//     let port = server.address().port;
-//     console.log("App now running on http://localhost", +port);
-//   });
-// });
-
-// const result = await connection.execute("SELECT * FROM SPAR_SITES_VIEW");
-// Release the connection
-
-// Convert the result into a JSON object
-// let newData = [];
-// const jsonObject = result.rows.reduce((acc, row) => {
-//   console.log(row);
-//   let obj = {
-//     number: row[0],
-//     name: row[1],
-//     id: row[2],
-//     site: row[3],
-//     group: row[4],
-//   };
-//   console.log(obj);
-//   newData.push(obj);
-// }, {});
-
-// await connection.close();
