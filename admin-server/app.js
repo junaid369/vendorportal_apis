@@ -99,7 +99,7 @@ async function run() {
         //cron job setup
         // Schedule the task to run at 10 AM and 11 PM every day
         // cron.schedule("* * * * *", scheduledFunction);
-        cron.schedule("0 10,23 * * *", scheduledFunction);
+        cron.schedule("35 10,17 * * *", scheduledFunction);
         cron.schedule("0 9,22 * * *", poFunction);
         cron.schedule("5 9,22 * * *", poDetailFunction);
         cron.schedule("6 9,22 * * *", poFooterFunction);
@@ -121,6 +121,7 @@ async function run() {
     }
     // Your function to be executed
     const scheduledFunction = async () => {
+      console.log("function inside sites view+++++++++++");
       let newData = [];
       //fetch oracle db data and insert those datas into mongodb
       const result = await connection.execute("select * from SPAR_SITES_VIEW");
