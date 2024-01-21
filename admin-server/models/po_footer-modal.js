@@ -59,7 +59,10 @@ const poFooterViewSchema = new mongoose.Schema(
     },
   },
   {
-    timestamps: true, // Add timestamps for createdAt and updatedAt fields
+    timestamps: {
+      currentTime: () =>
+        new Date().toLocaleString("en-US", { timeZone: "Asia/Riyadh" }),
+    },
   }
 );
 
