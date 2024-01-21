@@ -100,9 +100,9 @@ async function run() {
         // Schedule the task to run at 10 AM and 11 PM every day
         // cron.schedule("* * * * *", scheduledFunction);
         cron.schedule("0 10,22 * * *", scheduledFunction);
-        cron.schedule("55 9,17 * * *", poFunction);
-        cron.schedule("5 9,22 * * *", poDetailFunction);
-        cron.schedule("6 9,22 * * *", poFooterFunction);
+        cron.schedule("0 7,19 * * *", poFunction);
+        cron.schedule("5 7,19 * * *", poDetailFunction);
+        cron.schedule("6 7,19 * * *", poFooterFunction);
 
         //end
         console.log("Connected to MongoDB");
