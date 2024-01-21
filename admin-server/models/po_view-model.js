@@ -60,7 +60,6 @@ const poHeaderViewSchema = new mongoose.Schema(
       //   type: Number,
     },
 
-
     comp_Name_Supp: {
       //   type: Number,
     },
@@ -89,17 +88,13 @@ const poHeaderViewSchema = new mongoose.Schema(
     vat_Code_Supp: {
       //   type: Number,
     },
-    comp_Name_Cust:{
-
-    },
+    comp_Name_Cust: {},
     street1_Cust: {
       //   type: Number,
     },
     street2_Cust: {
       //   type: Number,
     },
- 
-
 
     postal_Code_Cust: {
       //   type: Number,
@@ -119,7 +114,6 @@ const poHeaderViewSchema = new mongoose.Schema(
     vat_Code_Cust: {
       //   type: Number,
     },
-
 
     customer_Number: {
       //   type: Number,
