@@ -18,6 +18,7 @@ const grnHeaderViewSchema = require("./models/grn_header_view-modal");
 const poDetailViewSchema = require("./models/po_Detail_view-model");
 const grnDetailViewSchema = require("./models/grn_detail_view-modal");
 const poFooterViewSchema = require("./models/po_footer-modal");
+const grnFooterViewSchema = require("./models/grn_footer-modal");
 
 const service = require("./service/Viewreports-service");
 const { log } = require("util");
@@ -104,13 +105,13 @@ async function run() {
         // cron.schedule("* * * * *", scheduledFunction);
         cron.schedule("0 10,22 * * *", scheduledFunction);
 
-        cron.schedule("0 7,19 * * *", poFunction);
+        cron.schedule("10 20,19 * * *", poFunction);
         cron.schedule("5 7,19 * * *", poDetailFunction);
         cron.schedule("8 7,19 * * *", poFooterFunction);
         //grn
         cron.schedule("0 6,18 * * *", grnFunction);
         cron.schedule("12 6,18 * * *", grnDetailFunction);
-        cron.schedule("22 6,18 * * *", grnFooterFunction);
+        cron.schedule("15 6,18 * * *", grnFooterFunction);
 
         //end
         console.log("Connected to MongoDB");
@@ -598,8 +599,89 @@ async function run() {
         }
       }
     };
-
     const grnFooterFunction = async () => {
+      console.log("grn detail view");
+      let newData = [];
+      //fetch oracle db data and insert those datas into mongodb
+      const result = await connection.execute(
+        "select * from SPAR_GRN_Footer_View"
+      );
+      // await connection.close(); // Release the connection back to the pool
+      console.log("inside the grn footer", result.rows.length);
+
+      if (result.rows) {
+        console.log("inside the grn footer", result.rows.length);
+        const jsonObject = result.rows.reduce((acc, row) => {
+          let obj = {
+            Po_No: row[0],
+            Po_Int_Code: row[1],
+            Glob_Int_Code: row[2],
+            Glob_order: row[3],
+            Site_Code: row[4],
+            Int_Grn_No: row[5],
+            Grn_No: row[6],
+            Dn_No: row[7],
+            Grn_Dt: row[8],
+            Cnt_Articles: row[9],
+            Cnt_Pu: row[10],
+            Cnt_Sku: row[11],
+            Tot_Gross: row[12],
+            Tot_Linedisc: row[13],
+            Excise_Tax: row[14],
+            Footer_Disc: row[15],
+            Net_Pval: row[16],
+            Landed_Cost: row[17],
+            Total_Vat: row[18],
+            Total_Amt_W_Vat: row[19],
+            Total_Sales_Aft_Tax: row[20],
+          };
+          newData.push(obj);
+        }, {});
+        if (newData.length > 0) {
+          //fetch mongodb datas
+
+          let exisitingData = await grnFooterViewSchema.aggregate([
+            { $match: {} },
+            {
+              $project: {
+                _id: 0,
+                createdAt: 0,
+                updatedAt: 0,
+              },
+            },
+          ]);
+
+          console.log(exisitingData.length, "+++++");
+
+          if (exisitingData.length == 0) {
+            console.log("log ger her for insert document");
+            let insertQuery = await grnFooterViewSchema.insertMany(newData);
+          } else {
+            console.log("update query");
+            newData.forEach(async (obj1) => {
+              const obj2 = exisitingData.find(
+                (item) => item.Po_No === obj1.Po_No
+              );
+
+              if (obj2) {
+                if (obj1 == obj2) {
+                } else {
+                  await grnFooterViewSchema.updateOne(
+                    { Po_No: obj1.Po_No },
+                    { $set: obj1 }
+                  );
+                }
+              } else {
+                await grnFooterViewSchema.create(obj1);
+              }
+            });
+          }
+        }
+      }
+    };
+
+    // grnFooterFunction
+    const grnFooterrFunction = async () => {
       console.log("inside the footer function");
 
       let newData = [];
