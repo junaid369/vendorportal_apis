@@ -103,16 +103,16 @@ async function run() {
         //cron job setup
         // Schedule the task to run at 10 AM and 11 PM every day
         // cron.schedule("* * * * *", scheduledFunction);
-        cron.schedule("0 10,22 * * *", scheduledFunction);
-
-        cron.schedule("10 20,19 * * *", poFunction);
+        
+        cron.schedule("10 7,19 * * *", poFunction);
         cron.schedule("5 7,19 * * *", poDetailFunction);
         cron.schedule("8 7,19 * * *", poFooterFunction);
         //grn
         cron.schedule("0 6,18 * * *", grnFunction);
         cron.schedule("12 6,18 * * *", grnDetailFunction);
         cron.schedule("15 6,18 * * *", grnFooterFunction);
-
+        
+        cron.schedule("0 10,22 * * *", scheduledFunction);
         //end
         console.log("Connected to MongoDB");
         require("./routes")(app, db);
