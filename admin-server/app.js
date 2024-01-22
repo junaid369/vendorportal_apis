@@ -14,10 +14,13 @@ const cors = require("cors");
 //scema fetch
 const sitesViewSchema = require("./models/sites_view-model");
 const poHeaderViewSchema = require("./models/po_view-model");
+const grnHeaderViewSchema = require("./models/grn_header_view-modal");
 const poDetailViewSchema = require("./models/po_Detail_view-model");
+const grnDetailViewSchema = require("./models/grn_detail_view-modal");
 const poFooterViewSchema = require("./models/po_footer-modal");
 
 const service = require("./service/Viewreports-service");
+const { log } = require("util");
 
 //end
 
@@ -100,9 +103,14 @@ async function run() {
         // Schedule the task to run at 10 AM and 11 PM every day
         // cron.schedule("* * * * *", scheduledFunction);
         cron.schedule("0 10,22 * * *", scheduledFunction);
+
         cron.schedule("0 7,19 * * *", poFunction);
         cron.schedule("5 7,19 * * *", poDetailFunction);
-        cron.schedule("6 7,19 * * *", poFooterFunction);
+        cron.schedule("8 7,19 * * *", poFooterFunction);
+        //grn
+        cron.schedule("0 6,18 * * *", grnFunction);
+        cron.schedule("12 6,18 * * *", grnDetailFunction);
+        cron.schedule("22 6,18 * * *", grnFooterFunction);
 
         //end
         console.log("Connected to MongoDB");
@@ -121,7 +129,6 @@ async function run() {
     }
     // Your function to be executed
     const scheduledFunction = async () => {
-      console.log("function inside sites view+++++++++++");
       let newData = [];
       //fetch oracle db data and insert those datas into mongodb
       const result = await connection.execute("select * from SPAR_SITES_VIEW");
@@ -328,6 +335,271 @@ async function run() {
       }
     };
     const poFooterFunction = async () => {
+      console.log("inside the footer function");
+
+      let newData = [];
+      //fetch oracle db data and insert those datas into mongodb
+      const result = await connection.execute(
+        "select * from SPAR_PO_Footer_View"
+      );
+
+      // await connection.close(); // Release the connection back to the pool
+      if (result.rows) {
+        const jsonObject = result.rows.reduce((acc, row) => {
+          let obj = {
+            po_No: row[0],
+            po_Int_Code: row[1],
+            glob_Int_Code: row[2],
+            glob_order: row[3],
+            site_Code: row[4],
+            cnt_Articles: row[5],
+            cnt_Pu: row[6],
+            cnt_Sku: row[7],
+            tot_Gross: row[8],
+            tot_Linedisc: row[9],
+            excise_Tax: row[10],
+            footer_Disc: row[11],
+            net_Pval: row[12],
+            landed_Cost: row[13],
+            total_Vat: row[14],
+            total_Amt_W_Vat: row[15],
+          };
+          newData.push(obj);
+        }, {});
+
+        if (newData.length > 0) {
+          //fetch mongodb datas
+
+          let exisitingData = await poFooterViewSchema.find();
+          console.log(exisitingData.length, "---------");
+
+          if (exisitingData.length == 0) {
+            console.log("here");
+            let insertQuery = await poFooterViewSchema.insertMany(newData);
+            console.log("insert po detail");
+            return "Success";
+          } else {
+            console.log("update podetail");
+
+            //delet first
+            await poFooterViewSchema.deleteMany({});
+            let insertQuery = await poFooterViewSchema.insertMany(newData);
+            return "Success";
+          }
+        }
+      }
+    };
+    // grn Function
+
+    const grnFunction = async () => {
+      console.log("grn headre view");
+      let newData = [];
+      //fetch oracle db data and insert those datas into mongodb
+      const result = await connection.execute(
+        "select * from SPAR_GRN_Header_View"
+      );
+      // await connection.close(); // Release the connection back to the pool
+      console.log("inside the grn", result.rows.length);
+
+      if (result.rows) {
+        console.log("inside the grn", result.rows.length);
+        const jsonObject = result.rows.reduce((acc, row) => {
+          let obj = {
+            SITE: row[0],
+            Site_Name: row[1],
+            Po_No: row[2],
+            Po_Date: row[3],
+            Supp_No: row[4],
+            Addr_Chain: row[5],
+            CC: row[6],
+            // glob_order: row[7],
+            Grn_No: row[7],
+            Grn_Dt: row[8],
+            Grn_User: row[9],
+            Int_Grn_no: row[10],
+            Integration_Dt: row[11],
+            Valuation_Dt: row[12],
+            CARRIER: row[13],
+            Trans_Grp: row[14],
+            Seal_No: row[15],
+            Dn_No: row[16],
+            Accquired_No: row[17],
+            OBSERVATIONS: row[18],
+            Comp_Name_Supp: row[19],
+            Street1_Supp: row[20],
+            Street2_Supp: row[21],
+            Postal_Code_Supp: row[22],
+            Villa_Supp: row[23],
+            District_Supp: row[24],
+            Region_Supp: row[25],
+            Country_Supp: row[26],
+            Vat_Code_Supp: row[27],
+            Comp_Name_Cust: row[28],
+            Street1_Cust: row[29],
+            Street2_Cust: row[30],
+            Postal_Code_Cust: row[31],
+            Villa_cust: row[32],
+            District_Cust: row[33],
+            Region_Cust: row[34],
+            Country_Cust: row[35],
+            Vat_Code_Cust: row[36],
+            Customer_Number: row[37],
+            Currency_Code: row[38],
+            CURRENCY: row[39],
+            Exchange_Rate: row[40],
+            STATMENT1: row[41],
+            Pay_Type: row[42],
+            Subject_Vat: row[43],
+            Pay_Due_Date: row[44],
+            Dt_Cre: row[45],
+            Dt_Mod: row[46],
+          };
+          newData.push(obj);
+        }, {});
+        if (newData.length > 0) {
+          //fetch mongodb datas
+
+          let exisitingData = await grnHeaderViewSchema.aggregate([
+            { $match: {} },
+            {
+              $project: {
+                _id: 0,
+                createdAt: 0,
+                updatedAt: 0,
+              },
+            },
+          ]);
+
+          console.log(exisitingData.length, "+++++");
+
+          if (exisitingData.length == 0) {
+            console.log("log ger her for insert document");
+            let insertQuery = await grnHeaderViewSchema.insertMany(newData);
+          } else {
+            console.log("update query");
+            newData.forEach(async (obj1) => {
+              const obj2 = exisitingData.find(
+                (item) => item.Po_No === obj1.Po_No
+              );
+
+              if (obj2) {
+                if (obj1 == obj2) {
+                } else {
+                  await grnHeaderViewSchema.updateOne(
+                    { Po_No: obj1.Po_No },
+                    { $set: obj1 }
+                  );
+                }
+              } else {
+                await grnHeaderViewSchema.create(obj1);
+              }
+            });
+          }
+        }
+      }
+    };
+    const grnDetailFunction = async () => {
+      console.log("grn detail view");
+      let newData = [];
+      //fetch oracle db data and insert those datas into mongodb
+      const result = await connection.execute(
+        "select * from SPAR_GRN_Detail_View"
+      );
+      // await connection.close(); // Release the connection back to the pool
+      console.log("inside the grn", result.rows.length);
+
+      if (result.rows) {
+        console.log("inside the grn", result.rows.length);
+        const jsonObject = result.rows.reduce((acc, row) => {
+          let obj = {
+            Po_No: row[0],
+            Po_Int_Code: row[1],
+            Glob_Int_Code: row[2],
+            Glob_order: row[3],
+            Int_Grn_No: row[4],
+            Site_Code: row[5],
+            Prod_Code: row[6],
+            BARCODE: row[7],
+            Supp_Ref_Code: row[8],
+            LV: row[9],
+            LU: row[10],
+            Product_Desc: row[11],
+            Orig_Country: row[12],
+            LINENO: row[13],
+            Order_Qty_Pcs: row[14],
+            Free_Qty: row[15],
+            Back_Order_Qty: row[16],
+            Refused_Qty: row[17],
+            Received_Qty_Pcs: row[18],
+            Qty_Unit: row[19],
+            Gross_Pp: row[20],
+            DISCPERC: row[21],
+            DISCVALUE: row[22],
+            Net_Pp: row[23],
+            Pp_Unit: row[24],
+            VAT: row[25],
+            Line_Total: row[26],
+            Line_Total_Sales: row[27],
+            MARGPERC: row[28],
+            Vat_Value: row[29],
+            Recived_Weight: row[30],
+            Free_Weight: row[31],
+            Refused_Weight: row[32],
+            ARTUSTK: row[33],
+            Received_Packs: row[34],
+            Spl_Oper: row[35],
+            Sales_Price: row[36],
+            Grn_No: row[37],
+            CINR: row[38],
+            CINL: row[39],
+            SEQVL: row[40],
+          };
+          newData.push(obj);
+        }, {});
+        if (newData.length > 0) {
+          //fetch mongodb datas
+
+          let exisitingData = await grnDetailViewSchema.aggregate([
+            { $match: {} },
+            {
+              $project: {
+                _id: 0,
+                createdAt: 0,
+                updatedAt: 0,
+              },
+            },
+          ]);
+
+          console.log(exisitingData.length, "+++++");
+
+          if (exisitingData.length == 0) {
+            console.log("log ger her for insert document");
+            let insertQuery = await grnDetailViewSchema.insertMany(newData);
+          } else {
+            console.log("update query");
+            newData.forEach(async (obj1) => {
+              const obj2 = exisitingData.find(
+                (item) => item.Po_No === obj1.Po_No
+              );
+
+              if (obj2) {
+                if (obj1 == obj2) {
+                } else {
+                  await grnDetailViewSchema.updateOne(
+                    { Po_No: obj1.Po_No },
+                    { $set: obj1 }
+                  );
+                }
+              } else {
+                await grnDetailViewSchema.create(obj1);
+              }
+            });
+          }
+        }
+      }
+    };
+
+    const grnFooterFunction = async () => {
       console.log("inside the footer function");
 
       let newData = [];
