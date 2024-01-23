@@ -104,14 +104,14 @@ async function run() {
         // Schedule the task to run at 10 AM and 11 PM every day
         // cron.schedule("* * * * *", scheduledFunction);
         
-        cron.schedule("59 10,19 * * *", poFunction);
-        cron.schedule("55 10,19 * * *", poDetailFunction);
-        cron.schedule("56 10,19 * * *", poFooterFunction);
+        cron.schedule("5 10,19 * * *", poFunction);
+        cron.schedule("5 10,19 * * *", poDetailFunction);
+        cron.schedule("6 10,19 * * *", poFooterFunction);
         //grn
         // 6
-        cron.schedule("20 10,18 * * *", grnFunction);
-        cron.schedule("30 10,18 * * *", grnDetailFunction);
-        cron.schedule("40 10,18 * * *", grnFooterFunction);
+        cron.schedule("25 10,20 * * *", grnFunction);
+        cron.schedule("30 10,20 * * *", grnDetailFunction);
+        cron.schedule("40 10,20 * * *", grnFooterFunction);
         
         cron.schedule("10 10,22 * * *", scheduledFunction);
         //end
