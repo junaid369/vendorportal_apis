@@ -2,6 +2,7 @@
 const mongoose = require("mongoose");
 // const { NUMBER } = require("oracledb");
 require("dotenv").config();
+const moment = require('moment-timezone');
 
 // Create banner schema
 const poHeaderViewSchema = new mongoose.Schema(
@@ -131,13 +132,19 @@ const poHeaderViewSchema = new mongoose.Schema(
       //   type: Number,
     },
   },
-  {
-    timestamps: {
-      currentTime: () =>
-        new Date().toLocaleString("en-US", { timeZone: "Asia/Riyadh" }),
-    },
-  }
+  { timestamps: { createdAt: 'customCreatedAt', updatedAt: 'customUpdatedAt' } }
 );
+
+// Pre-save middleware to customize createdAt and updatedAt
+poHeaderViewSchema.pre('save', function (next) {
+  const currentTimeInSaudi = moment().tz('Asia/Riyadh').format();
+
+  // Set the customCreatedAt and customUpdatedAt fields
+  this.customCreatedAt = currentTimeInSaudi;
+  this.customUpdatedAt = currentTimeInSaudi;
+
+  next();
+});
 
 // Export banner schema
 module.exports = mongoose.model(process.env.PO_HEADER_VIEW, poHeaderViewSchema);
