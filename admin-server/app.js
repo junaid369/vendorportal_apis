@@ -108,9 +108,10 @@ async function run() {
         cron.schedule("57 8,19 * * *", poDetailFunction);
         cron.schedule("59 8,19 * * *", poFooterFunction);
         //grn
-        cron.schedule("0 6,18 * * *", grnFunction);
-        cron.schedule("12 6,18 * * *", grnDetailFunction);
-        cron.schedule("15 6,18 * * *", grnFooterFunction);
+        // 6
+        cron.schedule("8 9,18 * * *", grnFunction);
+        cron.schedule("12 9,18 * * *", grnDetailFunction);
+        cron.schedule("15 9,18 * * *", grnFooterFunction);
         
         cron.schedule("0 10,22 * * *", scheduledFunction);
         //end
