@@ -104,9 +104,9 @@ async function run() {
         // Schedule the task to run at 10 AM and 11 PM every day
         // cron.schedule("* * * * *", scheduledFunction);
         
-        cron.schedule("0 10,19 * * *", poFunction);
-        cron.schedule("5 10,19 * * *", poDetailFunction);
-        cron.schedule("6 10,19 * * *", poFooterFunction);
+        cron.schedule("50 10,19 * * *", poFunction);
+        cron.schedule("55 10,19 * * *", poDetailFunction);
+        cron.schedule("56 10,19 * * *", poFooterFunction);
         //grn
         // 6
         cron.schedule("20 10,18 * * *", grnFunction);
@@ -192,7 +192,7 @@ async function run() {
     // poFunction
 
     const poFunction = async () => {
-      console.log("inside the po function");
+      console.log("inside the po function",new Date());
       let newData = [];
       //fetch oracle db data and insert those datas into mongodb
       const result = await connection.execute(
@@ -269,7 +269,7 @@ async function run() {
       }
     };
     const poDetailFunction = async () => {
-      console.log("inside the detailpo function");
+      console.log("inside the detailpo function",new Date());
 
       let newData = [];
       //fetch oracle db data and insert those datas into mongodb
@@ -337,7 +337,7 @@ async function run() {
       }
     };
     const poFooterFunction = async () => {
-      console.log("inside the footer function");
+      console.log("inside the footer function",new Date());
 
       let newData = [];
       //fetch oracle db data and insert those datas into mongodb
@@ -394,7 +394,7 @@ async function run() {
     // grn Function
 
     const grnFunction = async () => {
-      console.log("grn headre view");
+      console.log("grn headre view",new Date());
       let newData = [];
       //fetch oracle db data and insert those datas into mongodb
       const result = await connection.execute(
@@ -501,7 +501,7 @@ async function run() {
       }
     };
     const grnDetailFunction = async () => {
-      console.log("grn detail view");
+      console.log("grn detail view",new Date());
       let newData = [];
       //fetch oracle db data and insert those datas into mongodb
       const result = await connection.execute(
@@ -601,7 +601,7 @@ async function run() {
       }
     };
     const grnFooterFunction = async () => {
-      console.log("grn detail view");
+      console.log("grn detail view",new Date());
       let newData = [];
       //fetch oracle db data and insert those datas into mongodb
       const result = await connection.execute(
