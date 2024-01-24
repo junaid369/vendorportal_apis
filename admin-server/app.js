@@ -19,9 +19,9 @@ const poDetailViewSchema = require("./models/po_Detail_view-model");
 const grnDetailViewSchema = require("./models/grn_detail_view-modal");
 const poFooterViewSchema = require("./models/po_footer-modal");
 const grnFooterViewSchema = require("./models/grn_footer-modal");
+const suppViewSchema = require("./models/supp_view-modal");
 
 const service = require("./service/Viewreports-service");
-const { log } = require("util");
 
 //end
 
@@ -101,22 +101,12 @@ async function run() {
       db.on("error", console.error.bind("MongoDB connection error:"));
       db.once("open", () => {
         //cron job setup
-        // Schedule the task to run at 10 AM and 11 PM every day
-        // cron.schedule("* * * * *", scheduledFunction);
-
         const poFunctions = async () => {
           await poFunction();
           await poDetailFunction();
           await poFooterFunction();
         };
         cron.schedule("55 8,19 * * *", poFunctions);
-        // cron.schedule("53 7,19 * * *", poDetailFunction);
-        // cron.schedule("56 7,19 * * *", poFooterFunction);
-
-        //test
-
-        //end
-        //grn
 
         const grnFunctions = async () => {
           await grnFunction();
@@ -124,10 +114,9 @@ async function run() {
           await grnFooterFunction();
         };
         cron.schedule("59 8,20 * * *", grnFunctions);
-        // cron.schedule("5 8,20 * * *", grnDetailFunction);
-        // cron.schedule("15 8,20 * * *", grnFooterFunction);
-
         cron.schedule("10 10,22 * * *", scheduledFunction);
+        cron.schedule("43 10,22 * * *", suppFunction);
+        
         //end
         console.log("Connected to MongoDB");
         require("./routes")(app, db);
@@ -694,59 +683,66 @@ async function run() {
         }
       }
     };
-
-    // grnFooterFunction
-    const grnFooterrFunction = async () => {
-      console.log("inside the footer function");
-
+    //supplier view
+    const suppFunction = async () => {
       let newData = [];
-      //fetch oracle db data and insert those datas into mongodb
       const result = await connection.execute(
-        "select * from SPAR_PO_Footer_View"
+        "select * from SPAR_SUPPLIERS_VIEW"
       );
-
       // await connection.close(); // Release the connection back to the pool
+      console.log("inside the supp", result.rows.length);
+
       if (result.rows) {
         const jsonObject = result.rows.reduce((acc, row) => {
           let obj = {
-            po_No: row[0],
-            po_Int_Code: row[1],
-            glob_Int_Code: row[2],
-            glob_order: row[3],
-            site_Code: row[4],
-            cnt_Articles: row[5],
-            cnt_Pu: row[6],
-            cnt_Sku: row[7],
-            tot_Gross: row[8],
-            tot_Linedisc: row[9],
-            excise_Tax: row[10],
-            footer_Disc: row[11],
-            net_Pval: row[12],
-            landed_Cost: row[13],
-            total_Vat: row[14],
-            total_Amt_W_Vat: row[15],
+            VENDOR: row[0],
+            FOUCFIN: row[1],
+            Vendor_Name: row[2],
+            STAT: row[3],
+            STATUS: row[4],
+            Supplier_Type: row[5],
+            Supplier_Category: row[6],
           };
           newData.push(obj);
         }, {});
-
         if (newData.length > 0) {
           //fetch mongodb datas
 
-          let exisitingData = await poFooterViewSchema.find();
-          console.log(exisitingData.length, "---------");
+          let exisitingData = await suppViewSchema.aggregate([
+            { $match: {} },
+            {
+              $project: {
+                _id: 0,
+                createdAt: 0,
+                updatedAt: 0,
+              },
+            },
+          ]);
+
+          console.log(exisitingData.length, "exisiting document");
 
           if (exisitingData.length == 0) {
-            console.log("here");
-            let insertQuery = await poFooterViewSchema.insertMany(newData);
-            console.log("insert po detail");
-            return "Success";
+            console.log("insert document");
+            let insertQuery = await suppViewSchema.insertMany(newData);
           } else {
-            console.log("update podetail");
+            console.log("update query");
+            newData.forEach(async (obj1) => {
+              const obj2 = exisitingData.find(
+                (item) => item.VENDOR === obj1.VENDOR
+              );
 
-            //delet first
-            await poFooterViewSchema.deleteMany({});
-            let insertQuery = await poFooterViewSchema.insertMany(newData);
-            return "Success";
+              if (obj2) {
+                if (obj1 == obj2) {
+                } else {
+                  await suppViewSchema.updateOne(
+                    { VENDOR: obj1.VENDOR },
+                    { $set: obj1 }
+                  );
+                }
+              } else {
+                await suppViewSchema.create(obj1);
+              }
+            });
           }
         }
       }

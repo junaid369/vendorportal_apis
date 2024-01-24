@@ -138,21 +138,21 @@ const poHeaderViewSchema = new mongoose.Schema(
 );
 
 
-poHeaderViewSchema.virtual('date_created').get(function () {
-  return formatInTimeZone(this.created_at, 'Asia/Riyadh', 'dd/MM/yyyy HH:mm:ss')
+// poHeaderViewSchema.virtual('date_created').get(function () {
+//   return formatInTimeZone(this.created_at, 'Asia/Riyadh', 'dd/MM/yyyy HH:mm:ss')
 
-})
-poHeaderViewSchema.virtual('date_updated').get(function () {
-  return formatInTimeZone(this.updated_at, 'Asia/Riyadh', 'dd/MM/yyyy HH:mm:ss')
-})
+// })
+// poHeaderViewSchema.virtual('date_updated').get(function () {
+//   return formatInTimeZone(this.updated_at, 'Asia/Riyadh', 'dd/MM/yyyy HH:mm:ss')
+// })
 // // Pre-save middleware to customize createdAt and updatedAt
-// poHeaderViewSchema.pre("save", function (next) {
-//   // Set createdAt and updatedAt to the current time in the Saudi Arabia time zone
-//   const now = moment().tz("Asia/Riyadh").toDate();
-//   this.createdAt = now;
-//   this.updatedAt = now;
-//   next();
-// });
+poHeaderViewSchema.pre("save", function (next) {
+  // Set createdAt and updatedAt to the current time in the Saudi Arabia time zone
+  const now = moment().tz("Asia/Riyadh").toDate();
+  this.createdAt = now;
+  this.updatedAt = now;
+  next();
+});
 
 // Export banner schema
 module.exports = mongoose.model(process.env.PO_HEADER_VIEW, poHeaderViewSchema);
