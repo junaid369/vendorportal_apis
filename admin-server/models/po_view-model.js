@@ -139,10 +139,11 @@ const poHeaderViewSchema = new mongoose.Schema(
 
 
 poHeaderViewSchema.virtual('date_created').get(function () {
-  return moment(this.created_at, 'Asia/Riyadh', 'dd/MM/yyyy HH:mm:ss')
+  return formatInTimeZone(this.created_at, 'Asia/Riyadh', 'dd/MM/yyyy HH:mm:ss')
+
 })
 poHeaderViewSchema.virtual('date_updated').get(function () {
-  return moment(this.updated_at, 'Asia/Riyadh', 'dd/MM/yyyy HH:mm:ss')
+  return formatInTimeZone(this.updated_at, 'Asia/Riyadh', 'dd/MM/yyyy HH:mm:ss')
 })
 // // Pre-save middleware to customize createdAt and updatedAt
 // poHeaderViewSchema.pre("save", function (next) {
