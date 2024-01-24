@@ -106,17 +106,17 @@ async function run() {
           await poDetailFunction();
           await poFooterFunction();
         };
-        cron.schedule("55 8,19 * * *", poFunctions);
+        cron.schedule("2 8,20 * * *", poFunctions);
 
         const grnFunctions = async () => {
           await grnFunction();
           await grnDetailFunction();
           await grnFooterFunction();
         };
-        cron.schedule("59 8,20 * * *", grnFunctions);
-        cron.schedule("10 10,22 * * *", scheduledFunction);
-        cron.schedule("43 10,22 * * *", suppFunction);
-        
+        cron.schedule("5 7,19 * * *", grnFunctions);
+        cron.schedule("1 10,22 * * *", scheduledFunction);
+        cron.schedule("3 6,18 * * *", suppFunction);
+
         //end
         console.log("Connected to MongoDB");
         require("./routes")(app, db);
@@ -471,6 +471,7 @@ async function run() {
                 _id: 0,
                 createdAt: 0,
                 updatedAt: 0,
+                __v: 0,
               },
             },
           ]);
@@ -488,12 +489,14 @@ async function run() {
               );
 
               if (obj2) {
-                if (obj1 == obj2) {
-                } else {
+                const hasChanges =
+                  JSON.stringify(obj1) !== JSON.stringify(obj2);
+                if (hasChanges) {
                   await grnHeaderViewSchema.updateOne(
                     { Po_No: obj1.Po_No },
                     { $set: obj1 }
                   );
+                } else {
                 }
               } else {
                 await grnHeaderViewSchema.create(obj1);
@@ -571,6 +574,7 @@ async function run() {
                 _id: 0,
                 createdAt: 0,
                 updatedAt: 0,
+                __v: 0,
               },
             },
           ]);
@@ -588,12 +592,14 @@ async function run() {
               );
 
               if (obj2) {
-                if (obj1 == obj2) {
-                } else {
+                const hasChanges =
+                  JSON.stringify(obj1) !== JSON.stringify(obj2);
+                if (hasChanges) {
                   await grnDetailViewSchema.updateOne(
                     { Po_No: obj1.Po_No },
                     { $set: obj1 }
                   );
+                } else {
                 }
               } else {
                 await grnDetailViewSchema.create(obj1);
@@ -651,6 +657,7 @@ async function run() {
                 _id: 0,
                 createdAt: 0,
                 updatedAt: 0,
+                __v: 0,
               },
             },
           ]);
@@ -668,12 +675,22 @@ async function run() {
               );
 
               if (obj2) {
-                if (obj1 == obj2) {
-                } else {
+                // if (obj1 == obj2) {
+                // } else {
+                //   await grnFooterViewSchema.updateOne(
+                //     { Po_No: obj1.Po_No },
+                //     { $set: obj1 }
+                //   );
+                // }
+
+                const hasChanges =
+                  JSON.stringify(obj1) !== JSON.stringify(obj2);
+                if (hasChanges) {
                   await grnFooterViewSchema.updateOne(
                     { Po_No: obj1.Po_No },
                     { $set: obj1 }
                   );
+                } else {
                 }
               } else {
                 await grnFooterViewSchema.create(obj1);
@@ -715,6 +732,7 @@ async function run() {
                 _id: 0,
                 createdAt: 0,
                 updatedAt: 0,
+                __v: 0,
               },
             },
           ]);
@@ -732,14 +750,29 @@ async function run() {
               );
 
               if (obj2) {
-                if (obj1 == obj2) {
-                } else {
+                const hasChanges =
+                  JSON.stringify(obj1) !== JSON.stringify(obj2);
+                if (hasChanges) {
+
                   await suppViewSchema.updateOne(
                     { VENDOR: obj1.VENDOR },
                     { $set: obj1 }
                   );
+                } else {
                 }
+                //     if (obj1 == obj2) {
+                //     } else {
+
+                // console.log("update query+++++++++",obj1,obj2);
+
+                //       await suppViewSchema.updateOne(
+                //         { VENDOR: obj1.VENDOR },
+                //         { $set: obj1 }
+                //       );
+                //     }
               } else {
+                console.log("update query______", obj1);
+
                 await suppViewSchema.create(obj1);
               }
             });
