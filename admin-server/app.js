@@ -106,14 +106,14 @@ async function run() {
           await poDetailFunction();
           await poFooterFunction();
         };
-        cron.schedule("2 8,20 * * *", poFunctions);
+        cron.schedule("15 3,20 * * *", poFunctions);
 
         const grnFunctions = async () => {
           await grnFunction();
           await grnDetailFunction();
           await grnFooterFunction();
         };
-        cron.schedule("5 7,19 * * *", grnFunctions);
+        cron.schedule("18 3,19 * * *", grnFunctions);
         cron.schedule("1 10,22 * * *", scheduledFunction);
         cron.schedule("3 6,18 * * *", suppFunction);
 
