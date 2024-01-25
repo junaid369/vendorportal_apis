@@ -106,16 +106,16 @@ async function run() {
           await poDetailFunction();
           await poFooterFunction();
         };
-        cron.schedule("23 3,20 * * *", poFunctions);
+        cron.schedule("30 15,20 * * *", poFunctions);
 
         const grnFunctions = async () => {
           await grnFunction();
           await grnDetailFunction();
           await grnFooterFunction();
         };
-        cron.schedule("25 3,19 * * *", grnFunctions);
-        cron.schedule("1 10,22 * * *", scheduledFunction);
-        cron.schedule("3 6,18 * * *", suppFunction);
+        cron.schedule("35 15,19 * * *", grnFunctions);
+        cron.schedule("36 15,22 * * *", scheduledFunction);
+        cron.schedule("37 15,18 * * *", suppFunction);
 
         //end
         console.log("Connected to MongoDB");
