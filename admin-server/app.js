@@ -106,16 +106,17 @@ async function run() {
           await poDetailFunction();
           await poFooterFunction();
         };
-        cron.schedule("30 15,20 * * *", poFunctions);
+        cron.schedule("5 7,14,21 * * *", poFunctions);
 
         const grnFunctions = async () => {
+          console.log("inside the function");
           await grnFunction();
           await grnDetailFunction();
           await grnFooterFunction();
         };
-        cron.schedule("35 15,19 * * *", grnFunctions);
-        cron.schedule("36 15,22 * * *", scheduledFunction);
-        cron.schedule("37 15,18 * * *", suppFunction);
+        cron.schedule("5 6,12,18 * * *", grnFunctions);
+        cron.schedule("5 5,10,15 * * *", scheduledFunction);
+        cron.schedule("5 4,8,12 * * *", suppFunction);
 
         //end
         console.log("Connected to MongoDB");
@@ -397,17 +398,15 @@ async function run() {
     // grn Function
 
     const grnFunction = async () => {
-      console.log("grn headre view", new Date());
       let newData = [];
       //fetch oracle db data and insert those datas into mongodb
       const result = await connection.execute(
         "select * from SPAR_GRN_Header_View"
       );
       // await connection.close(); // Release the connection back to the pool
-      console.log("inside the grn", result.rows.length);
+      console.log("inside the grn header", result.rows.length, new Date());
 
       if (result.rows) {
-        console.log("inside the grn", result.rows.length);
         const jsonObject = result.rows.reduce((acc, row) => {
           let obj = {
             SITE: row[0],
@@ -476,13 +475,10 @@ async function run() {
             },
           ]);
 
-          console.log(exisitingData.length, "+++++");
-
           if (exisitingData.length == 0) {
-            console.log("log ger her for insert document");
             let insertQuery = await grnHeaderViewSchema.insertMany(newData);
           } else {
-            console.log("update query");
+            console.log("update grn header");
             newData.forEach(async (obj1) => {
               const obj2 = exisitingData.find(
                 (item) => item.Po_No === obj1.Po_No
@@ -507,17 +503,18 @@ async function run() {
       }
     };
     const grnDetailFunction = async () => {
-      console.log("grn detail view", new Date());
       let newData = [];
+      console.log("inside grn detail");
       //fetch oracle db data and insert those datas into mongodb
+
       const result = await connection.execute(
         "select * from SPAR_GRN_Detail_View"
       );
+
       // await connection.close(); // Release the connection back to the pool
-      console.log("inside the grn", result.rows.length);
 
       if (result.rows) {
-        console.log("inside the grn", result.rows.length);
+        console.log("grndetail count", result.rows.length);
         const jsonObject = result.rows.reduce((acc, row) => {
           let obj = {
             Po_No: row[0],
@@ -579,13 +576,10 @@ async function run() {
             },
           ]);
 
-          console.log(exisitingData.length, "+++++");
-
           if (exisitingData.length == 0) {
-            console.log("log ger her for insert document");
             let insertQuery = await grnDetailViewSchema.insertMany(newData);
           } else {
-            console.log("update query");
+            console.log("update grndetail");
             newData.forEach(async (obj1) => {
               const obj2 = exisitingData.find(
                 (item) => item.Po_No === obj1.Po_No
@@ -602,6 +596,8 @@ async function run() {
                 } else {
                 }
               } else {
+                // console.log("new grndetail requst", obj1, "__________");
+
                 await grnDetailViewSchema.create(obj1);
               }
             });
@@ -610,17 +606,15 @@ async function run() {
       }
     };
     const grnFooterFunction = async () => {
-      console.log("grn detail view", new Date());
       let newData = [];
       //fetch oracle db data and insert those datas into mongodb
       const result = await connection.execute(
         "select * from SPAR_GRN_Footer_View"
       );
       // await connection.close(); // Release the connection back to the pool
-      console.log("inside the grn footer", result.rows.length);
+      console.log("inside the grn footer count", result.rows.length);
 
       if (result.rows) {
-        console.log("inside the grn footer", result.rows.length);
         const jsonObject = result.rows.reduce((acc, row) => {
           let obj = {
             Po_No: row[0],
@@ -662,13 +656,10 @@ async function run() {
             },
           ]);
 
-          console.log(exisitingData.length, "+++++");
-
           if (exisitingData.length == 0) {
-            console.log("log ger her for insert document");
             let insertQuery = await grnFooterViewSchema.insertMany(newData);
           } else {
-            console.log("update query");
+            console.log("update grn footer");
             newData.forEach(async (obj1) => {
               const obj2 = exisitingData.find(
                 (item) => item.Po_No === obj1.Po_No
@@ -753,7 +744,6 @@ async function run() {
                 const hasChanges =
                   JSON.stringify(obj1) !== JSON.stringify(obj2);
                 if (hasChanges) {
-
                   await suppViewSchema.updateOne(
                     { VENDOR: obj1.VENDOR },
                     { $set: obj1 }
