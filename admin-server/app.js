@@ -114,7 +114,7 @@ async function run() {
           await grnDetailFunction();
           await grnFooterFunction();
         };
-        cron.schedule("5 6,12,18 * * *", grnFunctions);
+        cron.schedule("5 10,12,18 * * *", grnFunctions);
         cron.schedule("5 5,10,15 * * *", scheduledFunction);
         cron.schedule("5 4,8,12 * * *", suppFunction);
 
@@ -582,7 +582,8 @@ async function run() {
             console.log("update grndetail");
             newData.forEach(async (obj1) => {
               const obj2 = exisitingData.find(
-                (item) => item.Po_No === obj1.Po_No
+                (item) =>
+                  item.Po_No === obj1.Po_No && item.LINENO === obj1.LINENO
               );
 
               if (obj2) {
@@ -590,7 +591,7 @@ async function run() {
                   JSON.stringify(obj1) !== JSON.stringify(obj2);
                 if (hasChanges) {
                   await grnDetailViewSchema.updateOne(
-                    { Po_No: obj1.Po_No },
+                    { Po_No: obj1.Po_No, LINENO: obj1.LINENO },
                     { $set: obj1 }
                   );
                 } else {
