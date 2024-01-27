@@ -114,7 +114,7 @@ async function run() {
           await grnDetailFunction();
           await grnFooterFunction();
         };
-        cron.schedule("5 10,12,18 * * *", grnFunctions);
+        cron.schedule("5 6,12,18 * * *", grnFunctions);
         cron.schedule("5 5,10,15 * * *", scheduledFunction);
         cron.schedule("5 4,8,12 * * *", suppFunction);
 
