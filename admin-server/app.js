@@ -111,8 +111,8 @@ async function run() {
         const grnFunctions = async () => {
           console.log("inside the function");
           await grnFunction();
-          await grnDetailFunction();
           await grnFooterFunction();
+          await grnDetailFunction();
         };
         cron.schedule("5 6,12,18 * * *", grnFunctions);
         cron.schedule("5 5,10,15 * * *", scheduledFunction);
