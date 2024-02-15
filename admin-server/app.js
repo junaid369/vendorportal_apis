@@ -110,7 +110,7 @@ async function run() {
           await poDetailFunction();
           await poFooterFunction();
         };
-        cron.schedule("45 11,17,21 * * *", poFunctions);
+        cron.schedule("5 13,17,21 * * *", poFunctions);
 
         const grnFunctions = async () => {
           console.log("inside the function");
