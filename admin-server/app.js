@@ -71,6 +71,11 @@ let corsOptions = {
 };
 //here is the cors magic
 app.use(cors(corsOptions));
+process.env.TZ = 'Asia/Riyadh';
+
+// Now new Date() will return the correct local time in Saudi Arabia
+let saudiDate = new Date();
+console.log(saudiDate,"++++++++++");
 
 //oracle db connection
 const dbConfig = {
