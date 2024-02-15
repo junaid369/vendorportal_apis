@@ -71,11 +71,9 @@ let corsOptions = {
 };
 //here is the cors magic
 app.use(cors(corsOptions));
-process.env.TZ = 'Asia/Riyadh';
+process.env.TZ = "Asia/Riyadh";
 
 // Now new Date() will return the correct local time in Saudi Arabia
-let saudiDate = new Date();
-console.log(saudiDate,"++++++++++");
 
 //oracle db connection
 const dbConfig = {
@@ -115,7 +113,7 @@ async function run() {
           await poDetailFunction();
           await poFooterFunction();
         };
-        cron.schedule("5 13,17,21 * * *", poFunctions);
+        cron.schedule("5 15,17,21 * * *", poFunctions);
 
         const grnFunctions = async () => {
           console.log("inside the function");
@@ -227,9 +225,9 @@ async function run() {
             comm_Contract: row[7],
             adress_chain_supp: row[8],
             po_Comments: row[9],
-            po_Date: new Date(row[10]),
-            delivery_Date: new Date(row[11]),
-            delivery_Deadline: new Date(row[12]),
+            po_Date: config.uaeTime(row[10]),
+            delivery_Date: config.uaeTime(row[11]),
+            delivery_Deadline:config.uaeTime(row[12]),
             free_Shipping: row[13],
             address_Chain_Cust: row[14],
             COMMENT1: row[15],
@@ -421,13 +419,13 @@ async function run() {
             SITE: row[0],
             Site_Name: row[1],
             Po_No: row[2],
-            Po_Date: new Date(row[3]),
+            Po_Date: config.uaeTime(row[3]),
             Supp_No: row[4],
             Addr_Chain: row[5],
             CC: row[6],
             // glob_order: row[7],
             Grn_No: row[7],
-            Grn_Dt: new Date(row[8]),
+            Grn_Dt: config.uaeTime(row[8]),
             Grn_User: row[9],
             Int_Grn_no: row[10],
             Integration_Dt: row[11],
@@ -464,8 +462,8 @@ async function run() {
             Pay_Type: row[42],
             Subject_Vat: row[43],
             Pay_Due_Date: row[44],
-            Dt_Cre: new Date(row[45]),
-            Dt_Mod: new Date(row[46]),
+            Dt_Cre: config.uaeTime(row[45]),
+            Dt_Mod: config.uaeTime(row[46]),
           };
           newData.push(obj);
         }, {});
@@ -1087,11 +1085,11 @@ async function run() {
         const jsonObject = result.rows.reduce((acc, row) => {
           let obj = {
             Location_Id: row[0],
-            Po_Date: row[1],
-            Selection_Date_Po: row[2],
-            Grn_Date: row[3],
-            Selection_Date_Grn: row[4],
-            ECDDLIM: row[5],
+            Po_Date:config.uaeTime(row[1]) ,
+            Selection_Date_Po: config.uaeTime(row[2]),
+            Grn_Date: config.uaeTime(row[3]),
+            Selection_Date_Grn: config.uaeTime(row[4]),
+            ECDDLIM:config.uaeTime( row[5]),
             Order_Type: row[6],
             Order_Type_Desc: row[7],
             Po_No: row[8],
@@ -1129,8 +1127,8 @@ async function run() {
             CINL: row[40],
             SEQVL: row[41],
             BRAND: row[42],
-            MONTH:row[3].getMonth() + 1,
-            YEAR:row[3].getFullYear(),
+            MONTH: row[3].getMonth() + 1,
+            YEAR: row[3].getFullYear(),
           };
           newData.push(obj);
         }, {});
