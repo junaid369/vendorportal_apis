@@ -26,7 +26,7 @@ const poHeaderViewSchema = new mongoose.Schema(
     ECDCFIN: {
       //   type: Number,
     },
-    supp_No: {
+    Supp_No: {
       //   type: Number,
     },
     comm_Contract: {
@@ -133,7 +133,10 @@ const poHeaderViewSchema = new mongoose.Schema(
     },
   },
   {
-    timestamps: true,
+    timestamps: {
+      currentTime: () =>
+        new Date().toLocaleString("en-US", { timeZone: "Asia/Riyadh" }),
+    },
   }
 );
 
@@ -146,13 +149,13 @@ const poHeaderViewSchema = new mongoose.Schema(
 //   return formatInTimeZone(this.updated_at, 'Asia/Riyadh', 'dd/MM/yyyy HH:mm:ss')
 // })
 // // Pre-save middleware to customize createdAt and updatedAt
-poHeaderViewSchema.pre("save", function (next) {
-  // Set createdAt and updatedAt to the current time in the Saudi Arabia time zone
-  const now = moment().tz("Asia/Riyadh").toDate();
-  this.createdAt = now;
-  this.updatedAt = now;
-  next();
-});
+// poHeaderViewSchema.pre("save", function (next) {
+//   // Set createdAt and updatedAt to the current time in the Saudi Arabia time zone
+//   const now = moment().tz("Asia/Riyadh").toDate();
+//   this.createdAt = now;
+//   this.updatedAt = now;
+//   next();
+// });
 
 // Export banner schema
 module.exports = mongoose.model(process.env.PO_HEADER_VIEW, poHeaderViewSchema);

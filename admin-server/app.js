@@ -20,6 +20,10 @@ const grnDetailViewSchema = require("./models/grn_detail_view-modal");
 const poFooterViewSchema = require("./models/po_footer-modal");
 const grnFooterViewSchema = require("./models/grn_footer-modal");
 const suppViewSchema = require("./models/supp_view-modal");
+const itemMasterViewSchema = require("./models/item_master_view-modal");
+const msViewSchema = require("./models/ms_view-modal");
+const stockViewSchema = require("./models/stock_view-model");
+const slaViewSchema = require("./models/sla_view-modal");
 
 const service = require("./service/Viewreports-service");
 
@@ -106,18 +110,21 @@ async function run() {
           await poDetailFunction();
           await poFooterFunction();
         };
-        cron.schedule("5 7,14,21 * * *", poFunctions);
+        cron.schedule("45 12,17,21 * * *", poFunctions);
 
         const grnFunctions = async () => {
           console.log("inside the function");
           await grnFunction();
           await grnFooterFunction();
-          await grnDetailFunction();
+          // await grnDetailFunction();
         };
-        cron.schedule("5 6,12,18 * * *", grnFunctions);
-        cron.schedule("5 5,10,15 * * *", scheduledFunction);
-        cron.schedule("5 4,8,12 * * *", suppFunction);
-
+        cron.schedule("2 6,17,21 * * *", grnFunctions);
+        cron.schedule("10 5,17,21 * * *", scheduledFunction);
+        cron.schedule("15 4,17,21 * * *", suppFunction);
+        cron.schedule("18 8,17,21 * * *", itemMasterViewFunction);
+        cron.schedule("20 9,17,21 * * *", sparMsViewFunction);
+        // cron.schedule("11 15,17,21 * * *", stockqtyFunction);
+        // cron.schedule("59 20,18,3 * * *", slaViewFunction);
         //end
         console.log("Connected to MongoDB");
         require("./routes")(app, db);
@@ -193,9 +200,7 @@ async function run() {
       }
     };
 
-    // poFunction
-
-    const poFunction = async () => {
+    async function poFunction() {
       console.log("inside the po function", new Date());
       let newData = [];
       //fetch oracle db data and insert those datas into mongodb
@@ -213,13 +218,13 @@ async function run() {
             glob_order: row[3],
             site_Code: row[4],
             ECDCFIN: row[5],
-            supp_No: row[6],
+            Supp_No: row[6],
             comm_Contract: row[7],
             adress_chain_supp: row[8],
             po_Comments: row[9],
-            po_Date: row[10],
-            delivery_Date: row[11],
-            delivery_Deadline: row[12],
+            po_Date: new Date(row[10]),
+            delivery_Date: new Date(row[11]),
+            delivery_Deadline: new Date(row[12]),
             free_Shipping: row[13],
             address_Chain_Cust: row[14],
             COMMENT1: row[15],
@@ -254,7 +259,6 @@ async function run() {
 
         if (newData.length > 0) {
           //fetch mongodb datas
-
           let exisitingData = await poHeaderViewSchema.find();
           console.log(exisitingData.length, "---------");
 
@@ -271,7 +275,7 @@ async function run() {
           }
         }
       }
-    };
+    }
     const poDetailFunction = async () => {
       console.log("inside the detailpo function", new Date());
 
@@ -280,7 +284,7 @@ async function run() {
       const result = await connection.execute(
         "select * from SPAR_PO_Detail_View"
       );
-      console.log(result.rows.length, "____________");
+      console.log(result, "____________");
 
       // await connection.close(); // Release the connection back to the pool
       if (result.rows) {
@@ -412,13 +416,13 @@ async function run() {
             SITE: row[0],
             Site_Name: row[1],
             Po_No: row[2],
-            Po_Date: row[3],
+            Po_Date: new Date(row[3]),
             Supp_No: row[4],
             Addr_Chain: row[5],
             CC: row[6],
             // glob_order: row[7],
             Grn_No: row[7],
-            Grn_Dt: row[8],
+            Grn_Dt: new Date(row[8]),
             Grn_User: row[9],
             Int_Grn_no: row[10],
             Integration_Dt: row[11],
@@ -455,8 +459,8 @@ async function run() {
             Pay_Type: row[42],
             Subject_Vat: row[43],
             Pay_Due_Date: row[44],
-            Dt_Cre: row[45],
-            Dt_Mod: row[46],
+            Dt_Cre: new Date(row[45]),
+            Dt_Mod: new Date(row[46]),
           };
           newData.push(obj);
         }, {});
@@ -502,6 +506,7 @@ async function run() {
         }
       }
     };
+
     const grnDetailFunction = async () => {
       let newData = [];
       console.log("inside grn detail");
@@ -692,6 +697,172 @@ async function run() {
         }
       }
     };
+    const itemMasterViewFunction = async () => {
+      let newData = [];
+      console.log("___________");
+      //fetch oracle db data and insert those datas into mongodb
+      const result = await connection.execute(
+        "select * from SPAR_ITEM_MASTER_VIEW"
+      );
+      // await connection.close(); // Release the connection back to the pool
+      console.log("inside the itemmaster count", result.rows.length);
+
+      if (result.rows) {
+        const jsonObject = result.rows.reduce((acc, row) => {
+          let obj = {
+            ARTCINR: row[0],
+            Article_Code: row[1],
+            Article_Descr_En: row[2],
+            Article_Descr_Ar: row[3],
+            Sales_Variant: row[4],
+            Sv_Descr_Long_En: row[5],
+            Sv_Descr_Long_Ar: row[6],
+            BARCODE: row[7],
+            ARTTYPP: row[8],
+            ARTTYPE: row[9],
+            ARTUSTK: row[10],
+            Stock_Unit: row[11],
+            ARTETAT: row[12],
+            STATUS: row[13],
+            CONSIGNMENT: row[14],
+            DIV: row[15],
+            DIVISION: row[16],
+            DEPT: row[17],
+            DEPARTMENT: row[18],
+            SEC: row[19],
+            SECTION: row[20],
+            CAT: row[21],
+            CATEGORY: row[22],
+            SCAT: row[23],
+            SUB_CATEGORY: row[24],
+            SSCAT: row[25],
+            SUB_SUB_SCABTEGORY: row[26],
+
+            BRAND: row[27],
+            Kvl_Flag: row[28],
+            Main_Supplier: row[29],
+            ARVETAT: row[30],
+            Sv_Status: row[31],
+            Main_Sv: row[32],
+            PACK: row[33],
+            ARVCVX: row[34],
+          };
+          newData.push(obj);
+        }, {});
+        if (newData.length > 0) {
+          //fetch mongodb datas
+
+          let exisitingData = await itemMasterViewSchema.aggregate([
+            { $match: {} },
+            {
+              $project: {
+                _id: 0,
+                createdAt: 0,
+                updatedAt: 0,
+                __v: 0,
+              },
+            },
+          ]);
+
+          if (exisitingData.length == 0) {
+            let insertQuery = await itemMasterViewSchema.insertMany(newData);
+          } else {
+            console.log("update items master view");
+            newData.forEach(async (obj1) => {
+              const obj2 = exisitingData.find(
+                (item) => item.Po_No === obj1.Po_No
+              );
+
+              if (obj2) {
+                const hasChanges =
+                  JSON.stringify(obj1) !== JSON.stringify(obj2);
+                if (hasChanges) {
+                  await itemMasterViewSchema.updateOne(
+                    { Po_No: obj1.Po_No },
+                    { $set: obj1 }
+                  );
+                } else {
+                }
+              } else {
+                await itemMasterViewSchema.create(obj1);
+              }
+            });
+          }
+        }
+      }
+    };
+    const sparMsViewFunction = async () => {
+      let newData = [];
+      console.log("___________inside ms view");
+      //fetch oracle db data and insert those datas into mongodb
+      const result = await connection.execute("select * from SPAR_MS_NEW_VIEW");
+      // await connection.close(); // Release the connection back to the pool
+      console.log("inside the msview count", result.rows.length);
+
+      if (result.rows) {
+        const jsonObject = result.rows.reduce((acc, row) => {
+          let obj = {
+            DIV: row[0],
+            DIVISION: row[1],
+            DEPT: row[2],
+            DPEARTMENT: row[3],
+            SEC: row[4],
+            SECTION: row[5],
+            CAT: row[6],
+            CATEGORY: row[7],
+            SCAT: row[8],
+            SUB_CATEGORY: row[9],
+            SSCAT: row[10],
+            SUB_SUB_CATEGORY: row[11],
+            MERCHPATH: row[12],
+            MERCH_PATH: row[13],
+            ITEM_COUNT: row[14],
+          };
+          newData.push(obj);
+        }, {});
+        if (newData.length > 0) {
+          //fetch mongodb datas
+
+          let exisitingData = await msViewSchema.aggregate([
+            { $match: {} },
+            {
+              $project: {
+                _id: 0,
+                createdAt: 0,
+                updatedAt: 0,
+                __v: 0,
+              },
+            },
+          ]);
+
+          if (exisitingData.length == 0) {
+            let insertQuery = await msViewSchema.insertMany(newData);
+          } else {
+            console.log("update  view");
+            newData.forEach(async (obj1) => {
+              const obj2 = exisitingData.find(
+                (item) => item.MERCHPATH === obj1.MERCHPATH
+              );
+
+              if (obj2) {
+                const hasChanges =
+                  JSON.stringify(obj1) !== JSON.stringify(obj2);
+                if (hasChanges) {
+                  await msViewSchema.updateOne(
+                    { MERCHPATH: obj1.MERCHPATH },
+                    { $set: obj1 }
+                  );
+                } else {
+                }
+              } else {
+                await msViewSchema.create(obj1);
+              }
+            });
+          }
+        }
+      }
+    };
+
     //supplier view
     const suppFunction = async () => {
       let newData = [];
@@ -768,6 +939,250 @@ async function run() {
               }
             });
           }
+        }
+      }
+    };
+
+    //stock qty
+
+    const stockqtyFunction = async () => {
+      let newData = [];
+      console.log("inside stock");
+
+      const limitValue = 80000; // specify the number of rows to limit
+      const offsetValue = 480000; // specify the offset value
+
+      const result = await connection.execute(
+        `SELECT *
+         FROM (
+           SELECT t.*, ROWNUM rnum
+           FROM (
+             SELECT *
+             FROM SPAR_STOCK_DETAILS_VIEW
+           ) t
+           WHERE ROWNUM <= :limit + :offset
+         )
+         WHERE rnum > :offset`,
+        {
+          limit: limitValue,
+          offset: offsetValue,
+        }
+      );
+      // await connection.close(); // Release the connection back to the pool
+      console.log("inside the stock", result.rows.length);
+
+      if (result.rows) {
+        const jsonObject = result.rows.reduce((acc, row) => {
+          let obj = {
+            Site_Group: row[0],
+            STOSITE: row[1],
+            Site_Name: row[2],
+            Article_Code: row[3],
+            Supp_No: row[4],
+            Sales_Variant: row[5],
+            BARCODE: row[6],
+            Sv_Desc_Long_Eng: row[7],
+            STOCKQTY: row[8],
+            Stockqty_Block: row[9],
+            Total: row[10],
+            DIV: row[11],
+            DIVISION: row[12],
+            SEC: row[13],
+            SECTION: row[14],
+            BRAND: row[15],
+            STOCKVALUE: row[16],
+            StockValue_Block: row[17],
+            Total_Value: row[18],
+          };
+          newData.push(obj);
+        }, {});
+        if (newData.length > 0) {
+          //fetch mongodb datas
+
+          let exisitingData = await stockViewSchema.aggregate([
+            { $match: {} },
+            {
+              $project: {
+                _id: 0,
+                createdAt: 0,
+                updatedAt: 0,
+                __v: 0,
+              },
+            },
+          ]);
+
+          console.log(exisitingData.length, "exisiting document");
+
+          // if (exisitingData.length == 0) {
+          console.log("insert document");
+          let insertQuery = await stockViewSchema.insertMany(newData);
+          // } else {
+          //   console.log("update query");
+          //   newData.forEach(async (obj1) => {
+          //     const obj2 = exisitingData.find(
+          //       (item) => item.VENDOR === obj1.VENDOR
+          //     );
+
+          //     if (obj2) {
+          //       const hasChanges =
+          //         JSON.stringify(obj1) !== JSON.stringify(obj2);
+          //       if (hasChanges) {
+          //         await suppViewSchema.updateOne(
+          //           { VENDOR: obj1.VENDOR },
+          //           { $set: obj1 }
+          //         );
+          //       } else {
+          //       }
+          //       //     if (obj1 == obj2) {
+          //       //     } else {
+
+          //       // console.log("update query+++++++++",obj1,obj2);
+
+          //       //       await suppViewSchema.updateOne(
+          //       //         { VENDOR: obj1.VENDOR },
+          //       //         { $set: obj1 }
+          //       //       );
+          //       //     }
+          //     } else {
+          //       console.log("update query______", obj1);
+
+          //       await suppViewSchema.create(obj1);
+          //     }
+          //   });
+          // }
+        }
+      }
+    };
+    const slaViewFunction = async () => {
+      console.log("sla");
+      let newData = [];
+      const limitValue = 80000; // specify the number of rows to limit
+      const offsetValue = 0; // specify the offset value
+
+      const result = await connection.execute(
+        `SELECT *
+         FROM (
+           SELECT t.*, ROWNUM rnum
+           FROM (
+             SELECT *
+             FROM SPAR_PO_VS_GRN_SERVLVL_VIEWH
+           ) t
+           WHERE ROWNUM <= :limit + :offset
+         )
+         WHERE rnum > :offset`,
+        {
+          limit: limitValue,
+          offset: offsetValue,
+        }
+      );
+      // await connection.close(); // Release the connection back to the pool
+      console.log("inside the sl", result.rows.length);
+
+      if (result.rows) {
+        const jsonObject = result.rows.reduce((acc, row) => {
+          let obj = {
+            Location_Id: row[0],
+            Po_Date: row[1],
+            Selection_Date_Po: row[2],
+            Grn_Date: row[3],
+            Selection_Date_Grn: row[4],
+            ECDDLIM: row[5],
+            Order_Type: row[6],
+            Order_Type_Desc: row[7],
+            Po_No: row[8],
+            Int_Grn_No: row[9],
+            Ext_Grn_No: row[10],
+            Delv_Note_No: row[11],
+            ARTUSTK: row[12],
+            Vat_Code: row[13],
+            Po_Status: row[14],
+            Po_Line_Status: row[15],
+            Supp_No: row[16],
+            Supplier_Name: row[17],
+            Cc_No: row[18],
+            DEPTCODE: row[19],
+            DEPTDESC: row[20],
+            SECTCODE: row[21],
+            SECTDESC: row[22],
+            Product_Code: row[23],
+            LV: row[24],
+            Lu_Description: row[25],
+            Order_Unit: row[26],
+            Pck_Size: row[27],
+            Order_Sku: row[28],
+            Order_Sku_Pck: row[29],
+            Po_Net_Value: row[30],
+            Rec_Qte: row[31],
+            Rec_Qte_Pck: row[32],
+            Rec_Value: row[33],
+            Diff_Qty: row[34],
+            Diff_Qty_Pck: row[35],
+            Diff_Value: row[36],
+            Qty_Serv_Lvl: row[37],
+            Val_Serv_Lvl: row[38],
+            CINR: row[39],
+            CINL: row[40],
+            SEQVL: row[41],
+            BRAND: row[42],
+            MONTH:row[3].getMonth() + 1,
+            YEAR:row[3].getFullYear(),
+          };
+          newData.push(obj);
+        }, {});
+        if (newData.length > 0) {
+          //fetch mongodb datas
+
+          let exisitingData = await slaViewSchema.aggregate([
+            { $match: {} },
+            {
+              $project: {
+                _id: 0,
+                createdAt: 0,
+                updatedAt: 0,
+                __v: 0,
+              },
+            },
+          ]);
+
+          console.log(exisitingData.length, "exisiting document");
+
+          // if (exisitingData.length == 0) {
+          console.log("insert document");
+          let insertQuery = await slaViewSchema.insertMany(newData);
+          // } else {
+          //   console.log("update query");
+          //   newData.forEach(async (obj1) => {
+          //     const obj2 = exisitingData.find(
+          //       (item) => item.VENDOR === obj1.VENDOR
+          //     );
+
+          //     if (obj2) {
+          //       const hasChanges =
+          //         JSON.stringify(obj1) !== JSON.stringify(obj2);
+          //       if (hasChanges) {
+          //         await suppViewSchema.updateOne(
+          //           { VENDOR: obj1.VENDOR },
+          //           { $set: obj1 }
+          //         );
+          //       } else {
+          //       }
+          //       //     if (obj1 == obj2) {
+          //       //     } else {
+
+          //       // console.log("update query+++++++++",obj1,obj2);
+
+          //       //       await suppViewSchema.updateOne(
+          //       //         { VENDOR: obj1.VENDOR },
+          //       //         { $set: obj1 }
+          //       //       );
+          //       //     }
+          //     } else {
+          //       console.log("update query______", obj1);
+
+          //       await suppViewSchema.create(obj1);
+          //     }
+          //   });
+          // }
         }
       }
     };
