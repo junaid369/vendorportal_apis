@@ -71,7 +71,7 @@ let corsOptions = {
 };
 //here is the cors magic
 app.use(cors(corsOptions));
-process.env.TZ = "Asia/Riyadh";
+// process.env.TZ = "Asia/Riyadh";
 
 // Now new Date() will return the correct local time in Saudi Arabia
 
@@ -104,6 +104,7 @@ async function run() {
         // Other options can be added here based on your requirements
       });
       const db = mongoose.connection;
+      console.log(new Date());
 
       db.on("error", console.error.bind("MongoDB connection error:"));
       db.once("open", () => {
@@ -113,21 +114,28 @@ async function run() {
           await poDetailFunction();
           await poFooterFunction();
         };
-        cron.schedule("5 15,17,21 * * *", poFunctions);
 
         const grnFunctions = async () => {
-          console.log("inside the function");
-          await grnFunction();
+          await grnFunction(db, connection);
+          await grnDetailFunction(db, connection);
           await grnFooterFunction();
-          // await grnDetailFunction();
         };
-        cron.schedule("2 6,17,21 * * *", grnFunctions);
-        cron.schedule("10 5,17,21 * * *", scheduledFunction);
-        cron.schedule("15 4,17,21 * * *", suppFunction);
-        cron.schedule("18 8,17,21 * * *", itemMasterViewFunction);
-        cron.schedule("20 9,17,21 * * *", sparMsViewFunction);
-        // cron.schedule("11 15,17,21 * * *", stockqtyFunction);
-        // cron.schedule("59 20,18,3 * * *", slaViewFunction);
+        const stockqtyFunctions = async () => {
+          await stockqtyFunction(db, connection);
+        };
+        const stockqtyFunctionsDayChanges = async () => {
+          await stockqtyFunctionDayChang(db, connection);
+        };
+
+        cron.schedule("22 8 * * *", poFunctions);
+        cron.schedule("27 9 * * *", grnFunctions);
+        cron.schedule("20 6 * * *", stockqtyFunctions);
+        cron.schedule("18 9,12,15,18 * * *", stockqtyFunctionsDayChanges);
+        cron.schedule("0 10 * * *", scheduledFunction);
+        cron.schedule("5 10 * * *", suppFunction);
+        // cron.schedule("19 7,17,21 * * *", itemMasterViewFunction);
+        cron.schedule("10 10 * * *", sparMsViewFunction);
+        // cron.schedule("8 12,18,3 * * *", slaViewFunction);
         //end
         console.log("Connected to MongoDB");
         require("./routes")(app, db);
@@ -227,7 +235,7 @@ async function run() {
             po_Comments: row[9],
             po_Date: config.uaeTime(row[10]),
             delivery_Date: config.uaeTime(row[11]),
-            delivery_Deadline:config.uaeTime(row[12]),
+            delivery_Deadline: config.uaeTime(row[12]),
             free_Shipping: row[13],
             address_Chain_Cust: row[14],
             COMMENT1: row[15],
@@ -287,7 +295,6 @@ async function run() {
       const result = await connection.execute(
         "select * from SPAR_PO_Detail_View"
       );
-      console.log(result, "____________");
 
       // await connection.close(); // Release the connection back to the pool
       if (result.rows) {
@@ -404,216 +411,17 @@ async function run() {
     };
     // grn Function
 
-    const grnFunction = async () => {
-      let newData = [];
-      //fetch oracle db data and insert those datas into mongodb
-      const result = await connection.execute(
-        "select * from SPAR_GRN_Header_View"
-      );
-      // await connection.close(); // Release the connection back to the pool
-      console.log("inside the grn header", result.rows.length, new Date());
+    async function grnFunction(db, connection) {
+      try {
+        const data = await service.funUpdateGrnHeader(db, connection);
+      } catch (error) {}
+    }
+    async function grnDetailFunction(db, connection) {
+      try {
+        const data = await service.funUpdateGrnHeaderDetail(db, connection);
+      } catch (error) {}
+    }
 
-      if (result.rows) {
-        const jsonObject = result.rows.reduce((acc, row) => {
-          let obj = {
-            SITE: row[0],
-            Site_Name: row[1],
-            Po_No: row[2],
-            Po_Date: config.uaeTime(row[3]),
-            Supp_No: row[4],
-            Addr_Chain: row[5],
-            CC: row[6],
-            // glob_order: row[7],
-            Grn_No: row[7],
-            Grn_Dt: config.uaeTime(row[8]),
-            Grn_User: row[9],
-            Int_Grn_no: row[10],
-            Integration_Dt: row[11],
-            Valuation_Dt: row[12],
-            CARRIER: row[13],
-            Trans_Grp: row[14],
-            Seal_No: row[15],
-            Dn_No: row[16],
-            Accquired_No: row[17],
-            OBSERVATIONS: row[18],
-            Comp_Name_Supp: row[19],
-            Street1_Supp: row[20],
-            Street2_Supp: row[21],
-            Postal_Code_Supp: row[22],
-            Villa_Supp: row[23],
-            District_Supp: row[24],
-            Region_Supp: row[25],
-            Country_Supp: row[26],
-            Vat_Code_Supp: row[27],
-            Comp_Name_Cust: row[28],
-            Street1_Cust: row[29],
-            Street2_Cust: row[30],
-            Postal_Code_Cust: row[31],
-            Villa_cust: row[32],
-            District_Cust: row[33],
-            Region_Cust: row[34],
-            Country_Cust: row[35],
-            Vat_Code_Cust: row[36],
-            Customer_Number: row[37],
-            Currency_Code: row[38],
-            CURRENCY: row[39],
-            Exchange_Rate: row[40],
-            STATMENT1: row[41],
-            Pay_Type: row[42],
-            Subject_Vat: row[43],
-            Pay_Due_Date: row[44],
-            Dt_Cre: config.uaeTime(row[45]),
-            Dt_Mod: config.uaeTime(row[46]),
-          };
-          newData.push(obj);
-        }, {});
-        if (newData.length > 0) {
-          //fetch mongodb datas
-
-          let exisitingData = await grnHeaderViewSchema.aggregate([
-            { $match: {} },
-            {
-              $project: {
-                _id: 0,
-                createdAt: 0,
-                updatedAt: 0,
-                __v: 0,
-              },
-            },
-          ]);
-
-          if (exisitingData.length == 0) {
-            let insertQuery = await grnHeaderViewSchema.insertMany(newData);
-          } else {
-            console.log("update grn header");
-            newData.forEach(async (obj1) => {
-              const obj2 = exisitingData.find(
-                (item) => item.Po_No === obj1.Po_No
-              );
-
-              if (obj2) {
-                const hasChanges =
-                  JSON.stringify(obj1) !== JSON.stringify(obj2);
-                if (hasChanges) {
-                  await grnHeaderViewSchema.updateOne(
-                    { Po_No: obj1.Po_No },
-                    { $set: obj1 }
-                  );
-                } else {
-                }
-              } else {
-                await grnHeaderViewSchema.create(obj1);
-              }
-            });
-          }
-        }
-      }
-    };
-
-    const grnDetailFunction = async () => {
-      let newData = [];
-      console.log("inside grn detail");
-      //fetch oracle db data and insert those datas into mongodb
-
-      const result = await connection.execute(
-        "select * from SPAR_GRN_Detail_View"
-      );
-
-      // await connection.close(); // Release the connection back to the pool
-
-      if (result.rows) {
-        console.log("grndetail count", result.rows.length);
-        const jsonObject = result.rows.reduce((acc, row) => {
-          let obj = {
-            Po_No: row[0],
-            Po_Int_Code: row[1],
-            Glob_Int_Code: row[2],
-            Glob_order: row[3],
-            Int_Grn_No: row[4],
-            Site_Code: row[5],
-            Prod_Code: row[6],
-            BARCODE: row[7],
-            Supp_Ref_Code: row[8],
-            LV: row[9],
-            LU: row[10],
-            Product_Desc: row[11],
-            Orig_Country: row[12],
-            LINENO: row[13],
-            Order_Qty_Pcs: row[14],
-            Free_Qty: row[15],
-            Back_Order_Qty: row[16],
-            Refused_Qty: row[17],
-            Received_Qty_Pcs: row[18],
-            Qty_Unit: row[19],
-            Gross_Pp: row[20],
-            DISCPERC: row[21],
-            DISCVALUE: row[22],
-            Net_Pp: row[23],
-            Pp_Unit: row[24],
-            VAT: row[25],
-            Line_Total: row[26],
-            Line_Total_Sales: row[27],
-            MARGPERC: row[28],
-            Vat_Value: row[29],
-            Recived_Weight: row[30],
-            Free_Weight: row[31],
-            Refused_Weight: row[32],
-            ARTUSTK: row[33],
-            Received_Packs: row[34],
-            Spl_Oper: row[35],
-            Sales_Price: row[36],
-            Grn_No: row[37],
-            CINR: row[38],
-            CINL: row[39],
-            SEQVL: row[40],
-          };
-          newData.push(obj);
-        }, {});
-        if (newData.length > 0) {
-          //fetch mongodb datas
-
-          let exisitingData = await grnDetailViewSchema.aggregate([
-            { $match: {} },
-            {
-              $project: {
-                _id: 0,
-                createdAt: 0,
-                updatedAt: 0,
-                __v: 0,
-              },
-            },
-          ]);
-
-          if (exisitingData.length == 0) {
-            let insertQuery = await grnDetailViewSchema.insertMany(newData);
-          } else {
-            console.log("update grndetail");
-            newData.forEach(async (obj1) => {
-              const obj2 = exisitingData.find(
-                (item) =>
-                  item.Po_No === obj1.Po_No && item.LINENO === obj1.LINENO
-              );
-
-              if (obj2) {
-                const hasChanges =
-                  JSON.stringify(obj1) !== JSON.stringify(obj2);
-                if (hasChanges) {
-                  await grnDetailViewSchema.updateOne(
-                    { Po_No: obj1.Po_No, LINENO: obj1.LINENO },
-                    { $set: obj1 }
-                  );
-                } else {
-                }
-              } else {
-                // console.log("new grndetail requst", obj1, "__________");
-
-                await grnDetailViewSchema.create(obj1);
-              }
-            });
-          }
-        }
-      }
-    };
     const grnFooterFunction = async () => {
       let newData = [];
       //fetch oracle db data and insert those datas into mongodb
@@ -948,119 +756,21 @@ async function run() {
 
     //stock qty
 
-    const stockqtyFunction = async () => {
-      let newData = [];
+    const stockqtyFunction = async (db, connection) => {
       console.log("inside stock");
 
-      const limitValue = 80000; // specify the number of rows to limit
-      const offsetValue = 480000; // specify the offset value
+      const data = await service.funUpdateStockView(db, connection);
+    };
+    const stockqtyFunctionDayChang = async (db, connection) => {
+      console.log("inside stock");
 
-      const result = await connection.execute(
-        `SELECT *
-         FROM (
-           SELECT t.*, ROWNUM rnum
-           FROM (
-             SELECT *
-             FROM SPAR_STOCK_DETAILS_VIEW
-           ) t
-           WHERE ROWNUM <= :limit + :offset
-         )
-         WHERE rnum > :offset`,
-        {
-          limit: limitValue,
-          offset: offsetValue,
-        }
-      );
-      // await connection.close(); // Release the connection back to the pool
-      console.log("inside the stock", result.rows.length);
-
-      if (result.rows) {
-        const jsonObject = result.rows.reduce((acc, row) => {
-          let obj = {
-            Site_Group: row[0],
-            STOSITE: row[1],
-            Site_Name: row[2],
-            Article_Code: row[3],
-            Supp_No: row[4],
-            Sales_Variant: row[5],
-            BARCODE: row[6],
-            Sv_Desc_Long_Eng: row[7],
-            STOCKQTY: row[8],
-            Stockqty_Block: row[9],
-            Total: row[10],
-            DIV: row[11],
-            DIVISION: row[12],
-            SEC: row[13],
-            SECTION: row[14],
-            BRAND: row[15],
-            STOCKVALUE: row[16],
-            StockValue_Block: row[17],
-            Total_Value: row[18],
-          };
-          newData.push(obj);
-        }, {});
-        if (newData.length > 0) {
-          //fetch mongodb datas
-
-          let exisitingData = await stockViewSchema.aggregate([
-            { $match: {} },
-            {
-              $project: {
-                _id: 0,
-                createdAt: 0,
-                updatedAt: 0,
-                __v: 0,
-              },
-            },
-          ]);
-
-          console.log(exisitingData.length, "exisiting document");
-
-          // if (exisitingData.length == 0) {
-          console.log("insert document");
-          let insertQuery = await stockViewSchema.insertMany(newData);
-          // } else {
-          //   console.log("update query");
-          //   newData.forEach(async (obj1) => {
-          //     const obj2 = exisitingData.find(
-          //       (item) => item.VENDOR === obj1.VENDOR
-          //     );
-
-          //     if (obj2) {
-          //       const hasChanges =
-          //         JSON.stringify(obj1) !== JSON.stringify(obj2);
-          //       if (hasChanges) {
-          //         await suppViewSchema.updateOne(
-          //           { VENDOR: obj1.VENDOR },
-          //           { $set: obj1 }
-          //         );
-          //       } else {
-          //       }
-          //       //     if (obj1 == obj2) {
-          //       //     } else {
-
-          //       // console.log("update query+++++++++",obj1,obj2);
-
-          //       //       await suppViewSchema.updateOne(
-          //       //         { VENDOR: obj1.VENDOR },
-          //       //         { $set: obj1 }
-          //       //       );
-          //       //     }
-          //     } else {
-          //       console.log("update query______", obj1);
-
-          //       await suppViewSchema.create(obj1);
-          //     }
-          //   });
-          // }
-        }
-      }
+      const data = await service.funUpdateStockViewDayChanges(db, connection);
     };
     const slaViewFunction = async () => {
       console.log("sla");
       let newData = [];
       const limitValue = 80000; // specify the number of rows to limit
-      const offsetValue = 0; // specify the offset value
+      const offsetValue = 240000; // specify the offset value
 
       const result = await connection.execute(
         `SELECT *
@@ -1085,11 +795,11 @@ async function run() {
         const jsonObject = result.rows.reduce((acc, row) => {
           let obj = {
             Location_Id: row[0],
-            Po_Date:config.uaeTime(row[1]) ,
+            Po_Date: config.uaeTime(row[1]),
             Selection_Date_Po: config.uaeTime(row[2]),
             Grn_Date: config.uaeTime(row[3]),
             Selection_Date_Grn: config.uaeTime(row[4]),
-            ECDDLIM:config.uaeTime( row[5]),
+            ECDDLIM: config.uaeTime(row[5]),
             Order_Type: row[6],
             Order_Type_Desc: row[7],
             Po_No: row[8],
