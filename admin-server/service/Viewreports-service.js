@@ -410,7 +410,7 @@ module.exports = {
       let status = true;
 
       // Initialize offset and limit
-      let offset = 0;
+      let offset = 120000;
       const limit = 60000; // Adjust this value based on your memory constraints
 
       let hasMoreData = true;
@@ -585,7 +585,38 @@ module.exports = {
       let hasMoreData = true;
       while (hasMoreData) {
         // Fetch data from Oracle in chunks
-        const data = await fetchDataFromOracle(offset, limit);
+        // const data = await fetchDataFromOracle(offset, limit);
+
+        let data = [
+          {
+            name: "junaid",
+            id: 1,
+            age: 20,
+            salary: 1200,
+            grade: "a",
+          },
+          {
+            name: "aslam",
+            id: 2,
+            age: 22,
+            salary: 2200,
+            grade: "b",
+          },
+          {
+            name: "yabish",
+            id: 3,
+            age: 20,
+            salary: 3200,
+            grade: "c",
+          },
+          {
+            name: "faris",
+            id: 4,
+            age: 25,
+            salary: 9200,
+            grade: "d",
+          },
+        ];
 
         // Insert or update data in MongoDB
 
@@ -656,56 +687,83 @@ module.exports = {
 
       // Function to synchronize data with MongoDB
       async function synchronizeDataWithMongo(data, offset, limit) {
-        console.log("for loop");
+        let inArraysSite = [];
+        let inArraysVarint = [];
 
-        for (i = 0; i < data.length; i++) {
-          let exisitingData = await stockViewSchema.aggregate([
-            {
-              $match: {
-                STOSITE: data[i].STOSITE,
-                Sales_Variant: data[i].Sales_Variant,
-              },
-            },
+        data.forEach((element) => {
+          inArraysSite.push(element.STOSITE);
+          inArraysVarint.push(element.Sales_Variant);
+        });
 
-            {
-              $project: {
-                _id: 0,
-                createdAt: 0,
-                updatedAt: 0,
-                __v: 0,
-              },
-            },
-          ]);
+        const query = {
+          $and: [
+            { STOSITE: { $in: inArraysSite } }, // Filter by idNo
+            { Sales_Variant: { $in: inArraysVarint } }, // Filter by variant
+          ],
+        };
 
-          console.log(exisitingData.length,"exisintg data length")
-          //check exisiting data have or not . if its need to check the data have any changes or not
-          if (exisitingData && exisitingData.length > 0) {
-            console.log("existing data")
-            const hasChanges =
-              JSON.stringify(exisitingData[0]) !== JSON.stringify(data[i]);
-            if (hasChanges) {
-              await stockViewSchema.updateOne(
-                {
-                  STOSITE: data[i].STOSITE,
-                  Sales_Variant: data[i].Sales_Variant,
-                },
-                { $set: data[i] }
-              );
-              continue;
+        let deleteStocks = await stockViewSchema.deleteMany(query);
+        let insertStocks = await stockViewSchema.insertMany(data);
+        console.log(insertStocks);
 
-              //update mogondb
-            } else {
-              continue;
+        // let fetch = await stockViewSchema.aggregate([
+        //   { $match: query },
+        //   {
+        //     $project: {
+        //       _id: 0,
+        //       createdAt: 0,
+        //       updatedAt: 0,
+        //       __v: 0,
+        //     },
+        //   },
+        // ]);
 
-              //nothing doing
-            }
-          } else {
-            console.log("new")
-            let insertQuery = await stockViewSchema.create(data[i]);
-            console.log("new insert")
-            continue;
-          }
-        }
+        // for (i = 0; i < data.length; i++) {
+        //   let exisitingData = await stockViewSchema.aggregate([
+        //     {
+        //       $match: {
+        //         STOSITE: data[i].STOSITE,
+        //         Sales_Variant: data[i].Sales_Variant,
+        //       },
+        //     },
+
+        //     {
+        //       $project: {
+        //         _id: 0,
+        //         createdAt: 0,
+        //         updatedAt: 0,
+        //         __v: 0,
+        //       },
+        //     },
+        //   ]);
+
+        //   //check exisiting data have or not . if its need to check the data have any changes or not
+        //   if (exisitingData && exisitingData.length > 0) {
+        //     const hasChanges =
+        //       JSON.stringify(exisitingData[0]) !== JSON.stringify(data[i]);
+        //     if (hasChanges) {
+        //       await stockViewSchema.updateOne(
+        //         {
+        //           STOSITE: data[i].STOSITE,
+        //           Sales_Variant: data[i].Sales_Variant,
+        //         },
+        //         { $set: data[i] }
+        //       );
+        //       continue;
+
+        //       //update mogondb
+        //     } else {
+        //       continue;
+
+        //       //nothing doing
+        //     }
+        //   } else {
+        //     console.log("new");
+        //     let insertQuery = await stockViewSchema.create(data[i]);
+        //     console.log("new insert");
+        //     continue;
+        //   }
+        // }
         // let exisitingData = await stockViewSchema.aggregate([
         //   { $match: {} },
         //   { $skip: offset },
