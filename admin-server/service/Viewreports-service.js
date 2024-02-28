@@ -410,11 +410,15 @@ module.exports = {
       let status = true;
 
       // Initialize offset and limit
-      let offset = 120000;
+      let offset = 0;
       const limit = 60000; // Adjust this value based on your memory constraints
 
       let hasMoreData = true;
       while (hasMoreData) {
+        if (status == true) {
+          await stockViewSchema.deleteMany({});
+          status = false;
+        }
         // Fetch data from Oracle in chunks
         const data = await fetchDataFromOracle(offset, limit);
 
@@ -491,7 +495,7 @@ module.exports = {
 
       // Function to synchronize data with MongoDB
       async function synchronizeDataWithMongo(data, offset, limit) {
-        let insertQuery = await stockViewSchema.insertMany(newData);
+        let insertQuery = await stockViewSchema.insertMany(data);
 
         //   console.log(offset, limit, "count and limit");
         //   let exisitingData = await stockViewSchema.aggregate([
