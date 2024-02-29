@@ -106,6 +106,10 @@ async function run() {
       const db = mongoose.connection;
       console.log(new Date());
 
+      //db insert
+
+      //end
+
       db.on("error", console.error.bind("MongoDB connection error:"));
       db.once("open", () => {
         //cron job setup
@@ -130,7 +134,7 @@ async function run() {
         cron.schedule("22 8 * * *", poFunctions);
         cron.schedule("27 9 * * *", grnFunctions);
         cron.schedule("15 5 * * *", stockqtyFunctions);
-        // cron.schedule("10 13 * * *", stockqtyFunctionsDayChanges);
+        cron.schedule("10 15 * * *", stockqtyFunctionsDayChanges);
         // cron.schedule("1 5 * * *", stockqtyFunctionsDayChanges);
         cron.schedule("0 10 * * *", scheduledFunction);
         cron.schedule("5 10 * * *", suppFunction);

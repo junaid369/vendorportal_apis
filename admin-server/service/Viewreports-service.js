@@ -268,7 +268,7 @@ module.exports = {
         const data = await fetchDataFromOracle(offset, limit);
 
         // Insert or update data in MongoDB
-        await synchronizeDataWithMongo(data);
+        await synchronizeDataWithMongo(data, offset, limit);
         console.log(data.length);
 
         // Update offset for next iteration
@@ -356,9 +356,11 @@ module.exports = {
       }
 
       // Function to synchronize data with MongoDB
-      async function synchronizeDataWithMongo(data) {
+      async function synchronizeDataWithMongo(data, offset, limit) {
         let exisitingData = await grnDetailViewSchema.aggregate([
           { $match: {} },
+          { $skip: offset },
+          { $limit: limit },
           {
             $project: {
               _id: 0,
@@ -584,45 +586,15 @@ module.exports = {
 
       // Initialize offset and limit
       let offset = 0;
-      const limit = 10000; // Adjust this value based on your memory constraints
+      const limit = 20000; // Adjust this value based on your memory constraints
 
       let hasMoreData = true;
       while (hasMoreData) {
         // Fetch data from Oracle in chunks
-        // const data = await fetchDataFromOracle(offset, limit);
-
-        let data = [
-          {
-            name: "junaid",
-            id: 1,
-            age: 20,
-            salary: 1200,
-            grade: "a",
-          },
-          {
-            name: "aslam",
-            id: 2,
-            age: 22,
-            salary: 2200,
-            grade: "b",
-          },
-          {
-            name: "yabish",
-            id: 3,
-            age: 20,
-            salary: 3200,
-            grade: "c",
-          },
-          {
-            name: "faris",
-            id: 4,
-            age: 25,
-            salary: 9200,
-            grade: "d",
-          },
-        ];
+        const data = await fetchDataFromOracle(offset, limit);
 
         // Insert or update data in MongoDB
+        console.log(data.length, "first");
 
         await synchronizeDataWithMongo(data, offset, limit);
         console.log(data.length);
@@ -692,132 +664,35 @@ module.exports = {
       // Function to synchronize data with MongoDB
       async function synchronizeDataWithMongo(data, offset, limit) {
         let inArraysSite = [];
-        let inArraysVarint = [];
 
         data.forEach((element) => {
-          inArraysSite.push(element.STOSITE);
-          inArraysVarint.push(element.Sales_Variant);
+          inArraysSite.push({
+            STOSITE: element.STOSITE,
+            Sales_Variant: element.Sales_Variant,
+          });
         });
 
-        const query = {
-          $and: [
-            { STOSITE: { $in: inArraysSite } }, // Filter by idNo
-            { Sales_Variant: { $in: inArraysVarint } }, // Filter by variant
-          ],
-        };
+        // let deleteStocks = await stockViewSchema.deleteMany({
+        //   $or: inArraysSite.map((input) => ({
+        //     $and: [
+        //       { STOSITE: input.STOSITE },
+        //       { Sales_Variant: input.Sales_Variant },
+        //     ],
+        //   })),
+        // });
+        let deleteStocks = await stockViewSchema.deleteMany({
+          $or: inArraysSite,
+        });
 
-        let deleteStocks = await stockViewSchema.deleteMany(query);
+        // $or: [
+        //   { id: yourId1, age: yourAge1 },
+        //   { id: yourId2, age: yourAge2 },
+        //   { id: yourId3, age: yourAge3 },
+        //   // Add more pairs as needed
+        // ]
+        console.log(deleteStocks, "delete");
         let insertStocks = await stockViewSchema.insertMany(data);
-        console.log(insertStocks);
-
-        // let fetch = await stockViewSchema.aggregate([
-        //   { $match: query },
-        //   {
-        //     $project: {
-        //       _id: 0,
-        //       createdAt: 0,
-        //       updatedAt: 0,
-        //       __v: 0,
-        //     },
-        //   },
-        // ]);
-
-        // for (i = 0; i < data.length; i++) {
-        //   let exisitingData = await stockViewSchema.aggregate([
-        //     {
-        //       $match: {
-        //         STOSITE: data[i].STOSITE,
-        //         Sales_Variant: data[i].Sales_Variant,
-        //       },
-        //     },
-
-        //     {
-        //       $project: {
-        //         _id: 0,
-        //         createdAt: 0,
-        //         updatedAt: 0,
-        //         __v: 0,
-        //       },
-        //     },
-        //   ]);
-
-        //   //check exisiting data have or not . if its need to check the data have any changes or not
-        //   if (exisitingData && exisitingData.length > 0) {
-        //     const hasChanges =
-        //       JSON.stringify(exisitingData[0]) !== JSON.stringify(data[i]);
-        //     if (hasChanges) {
-        //       await stockViewSchema.updateOne(
-        //         {
-        //           STOSITE: data[i].STOSITE,
-        //           Sales_Variant: data[i].Sales_Variant,
-        //         },
-        //         { $set: data[i] }
-        //       );
-        //       continue;
-
-        //       //update mogondb
-        //     } else {
-        //       continue;
-
-        //       //nothing doing
-        //     }
-        //   } else {
-        //     console.log("new");
-        //     let insertQuery = await stockViewSchema.create(data[i]);
-        //     console.log("new insert");
-        //     continue;
-        //   }
-        // }
-        // let exisitingData = await stockViewSchema.aggregate([
-        //   { $match: {} },
-        //   { $skip: offset },
-        //   { $limit: limit },
-        //   {
-        //     $project: {
-        //       _id: 0,
-        //       createdAt: 0,
-        //       updatedAt: 0,
-        //       __v: 0,
-        //     },
-        //   },
-        // ]);
-
-        // if (exisitingData.length == 0) {
-        //   let insertQuery = await stockViewSchema.insertMany(newData);
-        // } else {
-        //   // Check for updates and insertions
-        //   await data.forEach(async (obj1) => {
-        //     const matchingObj = await exisitingData.find(
-        //       (obj2) =>
-        //         obj2.Sales_Variant &&
-        //         obj2.STOSITE === obj1.Sales_Variant &&
-        //         obj1.STOSITE
-        //     );
-        //     if (matchingObj) {
-        //       // Update
-
-        //       const hasChanges =
-        //         JSON.stringify(obj1) !== JSON.stringify(matchingObj);
-
-        //       if (hasChanges) {
-        //         await stockViewSchema.updateOne(
-        //           {
-        //             STOSITE: obj2.STOSITE,
-        //             Sales_Variant: obj2.Sales_Variant,
-        //           },
-        //           { $set: obj1 }
-        //         );
-
-        //         //update mogondb
-        //       } else {
-        //         //nothing doing
-        //       }
-        //     } else {
-        //       //insert new
-        //       let insertQuery = await stockViewSchema.create(obj1);
-        //     }
-        //   });
-        // }
+        console.log(insertStocks.length, "insert lenght");
       }
 
       // synchronizeDataFromOracleToMongo();
