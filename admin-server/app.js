@@ -83,9 +83,9 @@ const dbConfig = {
   user: "VENDORPORTAL",
   password: "VENDORPORTAL",
   connectString: "192.168.14.237:1521/ESTK",
-  poolMax: 10, // Maximum number of connections in the pool
-  poolMin: 2, // Minimum number of connections in the pool
-  poolIncrement: 2, // Number of connections to add when needed
+  // poolMax: 10, // Maximum number of connections in the pool
+  // poolMin: 2, // Minimum number of connections in the pool
+  // poolIncrement: 2, // Number of connections to add when needed
 };
 
 async function run() {
@@ -138,7 +138,7 @@ async function run() {
         cron.schedule("5 10 * * *", suppFunction);
         cron.schedule("10 10 * * *", sparMsViewFunction);
         cron.schedule("19 11 * * *", itemMasterViewFunction);
-        cron.schedule("30 9,12,15,18 * * *", stockqtyFunctionsDayChanges);
+        cron.schedule("34 9,12,15,18 * * *", stockqtyFunctionsDayChanges);
         // cron.schedule("8 12,18,3 * * *", slaViewFunction);
         //end
         console.log("Connected to MongoDB");
@@ -766,7 +766,7 @@ async function run() {
       const data = await service.funUpdateStockView(db, connection);
     };
     const stockqtyFunctionDayChang = async (db, connection) => {
-      console.log("inside stock");
+      console.log("inside stock",new Date());
 
       const data = await service.funUpdateStockViewDayChanges(db, connection);
     };
