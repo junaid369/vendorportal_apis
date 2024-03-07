@@ -586,7 +586,7 @@ module.exports = {
 
       // Initialize offset and limit
       let offset = 0;
-      const limit = 20000; // Adjust this value based on your memory constraints
+      const limit = 8000; // Adjust this value based on your memory constraints
 
       let hasMoreData = true;
       while (hasMoreData) {
