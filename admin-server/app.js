@@ -104,7 +104,9 @@ async function run() {
         // Other options can be added here based on your requirements
       });
       const db = mongoose.connection;
-      console.log(new Date());
+      let time = new Date();
+
+      console.log(config.uaeTime(time));
 
       //db insert
 
@@ -766,7 +768,7 @@ async function run() {
       const data = await service.funUpdateStockView(db, connection);
     };
     const stockqtyFunctionDayChang = async (db, connection) => {
-      console.log("inside stock",new Date());
+      console.log("inside stock", new Date());
 
       const data = await service.funUpdateStockViewDayChanges(db, connection);
     };
