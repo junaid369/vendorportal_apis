@@ -133,7 +133,7 @@ async function run() {
           await stockqtyFunctionDayChang(db, connection);
         };
 
-        cron.schedule("15 11 * * *", stockqtyFunctions);
+        cron.schedule("25 11 * * *", stockqtyFunctions);
         cron.schedule("22 8 * * *", poFunctions);
         cron.schedule("27 9 * * *", grnFunctions);
         cron.schedule("0 10 * * *", scheduledFunction);
