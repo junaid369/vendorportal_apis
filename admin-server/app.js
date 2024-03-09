@@ -133,14 +133,14 @@ async function run() {
           await stockqtyFunctionDayChang(db, connection);
         };
 
-        cron.schedule("25 5 * * *", stockqtyFunctions);
+        cron.schedule("15 11 * * *", stockqtyFunctions);
         cron.schedule("22 8 * * *", poFunctions);
         cron.schedule("27 9 * * *", grnFunctions);
         cron.schedule("0 10 * * *", scheduledFunction);
         cron.schedule("5 10 * * *", suppFunction);
         cron.schedule("10 10 * * *", sparMsViewFunction);
         cron.schedule("19 11 * * *", itemMasterViewFunction);
-        cron.schedule("34 9,12,15,18 * * *", stockqtyFunctionsDayChanges);
+        // cron.schedule("34 9,12,15,18 * * *", stockqtyFunctionsDayChanges);
         // cron.schedule("8 12,18,3 * * *", slaViewFunction);
         //end
         console.log("Connected to MongoDB");
