@@ -144,7 +144,7 @@ async function run() {
         cron.schedule("10 10 * * *", sparMsViewFunction);
         // cron.schedule("19 11 * * *", itemMasterViewFunction);
         cron.schedule("34 9,12,15,18 * * *", stockqtyFunctionsDayChanges);
-        cron.schedule("17 10 * * *", slaViewFunction);
+        cron.schedule("20 14 * * *", slaViewFunction);
         //end
         console.log("Connected to MongoDB");
         require("./routes")(app, db);
@@ -691,8 +691,8 @@ async function run() {
     const slaViewFunction = async () => {
       console.log("sla");
       let newData = [];
-      const limitValue = 80000; // specify the number of rows to limit
-      const offsetValue = 240000; // specify the offset value
+      const limitValue = 60000; // specify the number of rows to limit
+      const offsetValue = 0; // specify the offset value
 
       const result = await connection.execute(
         `SELECT *
