@@ -144,7 +144,7 @@ async function run() {
         cron.schedule("10 10 * * *", sparMsViewFunction);
         // cron.schedule("19 11 * * *", itemMasterViewFunction);
         cron.schedule("34 9,12,15,18 * * *", stockqtyFunctionsDayChanges);
-        cron.schedule("15 10 * * *", slaViewFunction);
+        cron.schedule("17 10 * * *", slaViewFunction);
         //end
         console.log("Connected to MongoDB");
         require("./routes")(app, db);
