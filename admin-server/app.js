@@ -144,7 +144,7 @@ async function run() {
         cron.schedule("10 10 * * *", sparMsViewFunction);
         // cron.schedule("19 11 * * *", itemMasterViewFunction);
         cron.schedule("34 9,12,15,18 * * *", stockqtyFunctionsDayChanges);
-        cron.schedule("20 14 * * *", slaViewFunction);
+        cron.schedule("25 17 * * *", slaViewFunction);
         //end
         console.log("Connected to MongoDB");
         require("./routes")(app, db);
@@ -689,136 +689,121 @@ async function run() {
       const data = await service.funUpdateStockViewDayChanges(db, connection);
     };
     const slaViewFunction = async () => {
-      console.log("sla");
-      let newData = [];
-      const limitValue = 60000; // specify the number of rows to limit
-      const offsetValue = 0; // specify the offset value
+      try {
+        let newData = [];
 
-      const result = await connection.execute(
-        `SELECT *
-         FROM (
-           SELECT t.*, ROWNUM rnum
-           FROM (
-             SELECT *
-             FROM SPAR_PO_VS_GRN_SERVLVL_VIEWH
-           ) t
-           WHERE ROWNUM <= :limit + :offset
-         )
-         WHERE rnum > :offset`,
-        {
-          limit: limitValue,
-          offset: offsetValue,
+        // Initialize offset and limit
+        let offset = 60000;
+        const limit = 60000; // Adjust this value based on your memory constraints
+
+        let hasMoreData = true;
+        while (hasMoreData) {
+          // Fetch data from Oracle in chunks
+          const data = await fetchDataFromOracle(offset, limit);
+
+          // Insert or update data in MongoDB
+          await synchronizeDataWithMongo(data);
+
+          // Update offset for next iteration
+          offset += limit;
+          // Check if there are more records to fetch
+          hasMoreData = data.length === limit;
+          newData.length = 0;
         }
-      );
-      // await connection.close(); // Release the connection back to the pool
-      console.log("inside the sl", result.rows.length);
 
-      if (result.rows) {
-        const jsonObject = result.rows.reduce((acc, row) => {
-          let obj = {
-            Location_Id: row[0],
-            Po_Date: config.uaeTime(row[1]),
-            Selection_Date_Po: config.uaeTime(row[2]),
-            Grn_Date: config.uaeTime(row[3]),
-            Selection_Date_Grn: config.uaeTime(row[4]),
-            ECDDLIM: config.uaeTime(row[5]),
-            Order_Type: row[6],
-            Order_Type_Desc: row[7],
-            Po_No: row[8],
-            Int_Grn_No: row[9],
-            Ext_Grn_No: row[10],
-            Delv_Note_No: row[11],
-            ARTUSTK: row[12],
-            Vat_Code: row[13],
-            Po_Status: row[14],
-            Po_Line_Status: row[15],
-            Supp_No: row[16],
-            Supplier_Name: row[17],
-            Cc_No: row[18],
-            DEPTCODE: row[19],
-            DEPTDESC: row[20],
-            SECTCODE: row[21],
-            SECTDESC: row[22],
-            Product_Code: row[23],
-            LV: row[24],
-            Lu_Description: row[25],
-            Order_Unit: row[26],
-            Pck_Size: row[27],
-            Order_Sku: row[28],
-            Order_Sku_Pck: row[29],
-            Po_Net_Value: row[30],
-            Rec_Qte: row[31],
-            Rec_Qte_Pck: row[32],
-            Rec_Value: row[33],
-            Diff_Qty: row[34],
-            Diff_Qty_Pck: row[35],
-            Diff_Value: row[36],
-            Qty_Serv_Lvl: row[37],
-            Val_Serv_Lvl: row[38],
-            CINR: row[39],
-            CINL: row[40],
-            SEQVL: row[41],
-            BRAND: row[42],
-            MONTH: row[3].getMonth() + 1,
-            YEAR: row[3].getFullYear(),
-          };
-          newData.push(obj);
-        }, {});
-        if (newData.length > 0) {
-          //fetch mongodb datas
+        console.log(`Synchronization for table  completed successfully.`);
 
-          let exisitingData = await slaViewSchema.aggregate([
-            { $match: {} },
-            {
-              $project: {
-                _id: 0,
-                createdAt: 0,
-                updatedAt: 0,
-                __v: 0,
-              },
-            },
-          ]);
+        // Function to fetch data from Oracle with pagination
+        async function fetchDataFromOracle(offset, limit) {
+          try {
+            const result = await connection.execute(
+              `SELECT *
+               FROM (
+                 SELECT t.*, ROWNUM rnum
+                 FROM (
+                  select * SPAR_PO_VS_GRN_SERVLVL_VIEWH
+                 ) t
+                 WHERE ROWNUM <= :limit + :offset
+               )
+               WHERE rnum > :offset`,
+              {
+                limit: limit,
+                offset: offset,
+              }
+            );
 
-          console.log(exisitingData.length, "exisiting document");
+            if (result.rows) {
+              const jsonObject = result.rows.reduce((acc, row) => {
+                let obj = {
+                  Location_Id: row[0],
+                  Po_Date: config.uaeTime(row[1]),
+                  Selection_Date_Po: config.uaeTime(row[2]),
+                  Grn_Date: config.uaeTime(row[3]),
+                  Selection_Date_Grn: config.uaeTime(row[4]),
+                  ECDDLIM: config.uaeTime(row[5]),
+                  Order_Type: row[6],
+                  Order_Type_Desc: row[7],
+                  Po_No: row[8],
+                  Int_Grn_No: row[9],
+                  Ext_Grn_No: row[10],
+                  Delv_Note_No: row[11],
+                  ARTUSTK: row[12],
+                  Vat_Code: row[13],
+                  Po_Status: row[14],
+                  Po_Line_Status: row[15],
+                  Supp_No: row[16],
+                  Supplier_Name: row[17],
+                  Cc_No: row[18],
+                  DEPTCODE: row[19],
+                  DEPTDESC: row[20],
+                  SECTCODE: row[21],
+                  SECTDESC: row[22],
+                  Product_Code: row[23],
+                  LV: row[24],
+                  Lu_Description: row[25],
+                  Order_Unit: row[26],
+                  Pck_Size: row[27],
+                  Order_Sku: row[28],
+                  Order_Sku_Pck: row[29],
+                  Po_Net_Value: row[30],
+                  Rec_Qte: row[31],
+                  Rec_Qte_Pck: row[32],
+                  Rec_Value: row[33],
+                  Diff_Qty: row[34],
+                  Diff_Qty_Pck: row[35],
+                  Diff_Value: row[36],
+                  Qty_Serv_Lvl: row[37],
+                  Val_Serv_Lvl: row[38],
+                  CINR: row[39],
+                  CINL: row[40],
+                  SEQVL: row[41],
+                  BRAND: row[42],
+                  MONTH: row[3].getMonth() + 1,
+                  YEAR: row[3].getFullYear(),
+                };
+                newData.push(obj);
+              }, {});
+            }
 
-          // if (exisitingData.length == 0) {
-          console.log("insert document");
-          let insertQuery = await slaViewSchema.insertMany(newData);
-          // } else {
-          //   console.log("update query");
-          //   newData.forEach(async (obj1) => {
-          //     const obj2 = exisitingData.find(
-          //       (item) => item.VENDOR === obj1.VENDOR
-          //     );
-
-          //     if (obj2) {
-          //       const hasChanges =
-          //         JSON.stringify(obj1) !== JSON.stringify(obj2);
-          //       if (hasChanges) {
-          //         await suppViewSchema.updateOne(
-          //           { VENDOR: obj1.VENDOR },
-          //           { $set: obj1 }
-          //         );
-          //       } else {
-          //       }
-          //       //     if (obj1 == obj2) {
-          //       //     } else {
-
-          //       // console.log("update query+++++++++",obj1,obj2);
-
-          //       //       await suppViewSchema.updateOne(
-          //       //         { VENDOR: obj1.VENDOR },
-          //       //         { $set: obj1 }
-          //       //       );
-          //       //     }
-          //     } else {
-          //       console.log("update query______", obj1);
-
-          //       await suppViewSchema.create(obj1);
-          //     }
-          //   });
-          // }
+            return newData;
+          } catch (error) {
+            console.log(error);
+          }
         }
+
+        // Function to synchronize data with MongoDB
+        async function synchronizeDataWithMongo(data) {
+          let insertQuery = await slaViewSchema.insertMany(data);
+          console.log(insertQuery.length);
+        }
+
+        // synchronizeDataFromOracleToMongo();
+      } catch (error) {
+        return {
+          success: false,
+          message: "System:" + error,
+          data: arrayEmpty,
+        };
       }
     };
   } catch (error) {
