@@ -7,7 +7,7 @@ const poFooterViewSchema = require("../models/po_footer-modal");
 const grnHeaderViewSchema = require("../models/grn_header_view-modal");
 const grnDetailViewSchema = require("../models/grn_detail_view-modal");
 const stockViewSchema = require("../models/stock_view-model");
-const itemMasterViewSchema = require("./models/item_master_view-modal");
+const itemMasterViewSchema = require("../models/item_master_view-modal");
 
 const arrayEmpty = [];
 
