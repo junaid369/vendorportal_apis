@@ -132,6 +132,9 @@ async function run() {
         const stockqtyFunctionsDayChanges = async () => {
           await stockqtyFunctionDayChang(db, connection);
         };
+        const itemMasterViewFunction = async () => {
+          await itemMasterUpdate(db, connection);
+        };
 
         cron.schedule("01 12 * * *", stockqtyFunctions);
         cron.schedule("22 8 * * *", poFunctions);
@@ -139,9 +142,9 @@ async function run() {
         cron.schedule("0 10 * * *", scheduledFunction);
         cron.schedule("5 10 * * *", suppFunction);
         cron.schedule("10 10 * * *", sparMsViewFunction);
-        cron.schedule("19 11 * * *", itemMasterViewFunction);
-        // cron.schedule("34 9,12,15,18 * * *", stockqtyFunctionsDayChanges);
-        // cron.schedule("8 12,18,3 * * *", slaViewFunction);
+        // cron.schedule("19 11 * * *", itemMasterViewFunction);
+        cron.schedule("34 9,12,15,18 * * *", stockqtyFunctionsDayChanges);
+        cron.schedule("15 10 * * *", slaViewFunction);
         //end
         console.log("Connected to MongoDB");
         require("./routes")(app, db);
@@ -514,100 +517,13 @@ async function run() {
         }
       }
     };
-    const itemMasterViewFunction = async () => {
-      let newData = [];
-      console.log("___________");
-      //fetch oracle db data and insert those datas into mongodb
-      const result = await connection.execute(
-        "select * from SPAR_ITEM_MASTER_VIEW"
-      );
-      // await connection.close(); // Release the connection back to the pool
-      console.log("inside the itemmaster count", result.rows.length);
 
-      if (result.rows) {
-        const jsonObject = result.rows.reduce((acc, row) => {
-          let obj = {
-            ARTCINR: row[0],
-            Article_Code: row[1],
-            Article_Descr_En: row[2],
-            Article_Descr_Ar: row[3],
-            Sales_Variant: row[4],
-            Sv_Descr_Long_En: row[5],
-            Sv_Descr_Long_Ar: row[6],
-            BARCODE: row[7],
-            ARTTYPP: row[8],
-            ARTTYPE: row[9],
-            ARTUSTK: row[10],
-            Stock_Unit: row[11],
-            ARTETAT: row[12],
-            STATUS: row[13],
-            CONSIGNMENT: row[14],
-            DIV: row[15],
-            DIVISION: row[16],
-            DEPT: row[17],
-            DEPARTMENT: row[18],
-            SEC: row[19],
-            SECTION: row[20],
-            CAT: row[21],
-            CATEGORY: row[22],
-            SCAT: row[23],
-            SUB_CATEGORY: row[24],
-            SSCAT: row[25],
-            SUB_SUB_SCABTEGORY: row[26],
+    async function itemMasterUpdate(db, connection) {
+      try {
+        const data = await service.funUpdateItemMaster(db, connection);
+      } catch (error) {}
+    }
 
-            BRAND: row[27],
-            Kvl_Flag: row[28],
-            Main_Supplier: row[29],
-            ARVETAT: row[30],
-            Sv_Status: row[31],
-            Main_Sv: row[32],
-            PACK: row[33],
-            ARVCVX: row[34],
-          };
-          newData.push(obj);
-        }, {});
-        if (newData.length > 0) {
-          //fetch mongodb datas
-
-          let exisitingData = await itemMasterViewSchema.aggregate([
-            { $match: {} },
-            {
-              $project: {
-                _id: 0,
-                createdAt: 0,
-                updatedAt: 0,
-                __v: 0,
-              },
-            },
-          ]);
-
-          if (exisitingData.length == 0) {
-            let insertQuery = await itemMasterViewSchema.insertMany(newData);
-          } else {
-            console.log("update items master view");
-            newData.forEach(async (obj1) => {
-              const obj2 = exisitingData.find(
-                (item) => item.Po_No === obj1.Po_No
-              );
-
-              if (obj2) {
-                const hasChanges =
-                  JSON.stringify(obj1) !== JSON.stringify(obj2);
-                if (hasChanges) {
-                  await itemMasterViewSchema.updateOne(
-                    { Po_No: obj1.Po_No },
-                    { $set: obj1 }
-                  );
-                } else {
-                }
-              } else {
-                await itemMasterViewSchema.create(obj1);
-              }
-            });
-          }
-        }
-      }
-    };
     const sparMsViewFunction = async () => {
       let newData = [];
       console.log("___________inside ms view");

@@ -7,6 +7,7 @@ const poFooterViewSchema = require("../models/po_footer-modal");
 const grnHeaderViewSchema = require("../models/grn_header_view-modal");
 const grnDetailViewSchema = require("../models/grn_detail_view-modal");
 const stockViewSchema = require("../models/stock_view-model");
+const itemMasterViewSchema = require("./models/item_master_view-modal");
 
 const arrayEmpty = [];
 
@@ -692,6 +693,133 @@ module.exports = {
         // ]
         console.log(deleteStocks, "delete");
         let insertStocks = await stockViewSchema.insertMany(data);
+        console.log(insertStocks.length, "insert lenght");
+      }
+
+      // synchronizeDataFromOracleToMongo();
+    } catch (error) {
+      return {
+        success: false,
+        message: "System:" + error,
+        data: arrayEmpty,
+      };
+    }
+  },
+  funUpdateItemMaster: async function (db, connection) {
+    try {
+      console.log("inside main day view");
+      let newData = [];
+
+      // Initialize offset and limit
+      let offset = 0;
+      const limit = 8000; // Adjust this value based on your memory constraints
+
+      let hasMoreData = true;
+      while (hasMoreData) {
+        // Fetch data from Oracle in chunks
+        const data = await fetchDataFromOracle(offset, limit);
+
+        // Insert or update data in MongoDB
+        console.log(data.length, "first");
+
+        await synchronizeDataWithMongo(data, offset, limit);
+        console.log(data.length);
+
+        // Update offset for next iteration
+        offset += limit;
+        // Check if there are more records to fetch
+        hasMoreData = data.length === limit;
+        console.log(hasMoreData);
+        newData.length = 0;
+      }
+
+      console.log(`Synchronization for table  completed successfully.`);
+
+      // Function to fetch data from Oracle with pagination
+      async function fetchDataFromOracle(offset, limit) {
+        try {
+          const result = await connection.execute(
+            `SELECT *
+             FROM (
+               SELECT t.*, ROWNUM rnum
+               FROM (
+                select * from SPAR_ITEM_MASTER_VIEW
+               ) t
+               WHERE ROWNUM <= :limit + :offset
+             )
+             WHERE rnum > :offset`,
+            {
+              limit: limit,
+              offset: offset,
+            }
+          );
+
+          if (result.rows) {
+            const jsonObject = result.rows.reduce((acc, row) => {
+              let obj = {
+                ARTCINR: row[0],
+                Article_Code: row[1],
+                Article_Descr_En: row[2],
+                Article_Descr_Ar: row[3],
+                Sales_Variant: row[4],
+                Sv_Descr_Long_En: row[5],
+                Sv_Descr_Long_Ar: row[6],
+                BARCODE: row[7],
+                ARTTYPP: row[8],
+                ARTTYPE: row[9],
+                ARTUSTK: row[10],
+                Stock_Unit: row[11],
+                ARTETAT: row[12],
+                STATUS: row[13],
+                CONSIGNMENT: row[14],
+                DIV: row[15],
+                DIVISION: row[16],
+                DEPT: row[17],
+                DEPARTMENT: row[18],
+                SEC: row[19],
+                SECTION: row[20],
+                CAT: row[21],
+                CATEGORY: row[22],
+                SCAT: row[23],
+                SUB_CATEGORY: row[24],
+                SSCAT: row[25],
+                SUB_SUB_SCABTEGORY: row[26],
+                BRAND: row[27],
+                Kvl_Flag: row[28],
+                Main_Supplier: row[29],
+                ARVETAT: row[30],
+                Sv_Status: row[31],
+                Main_Sv: row[32],
+                PACK: row[33],
+                ARVCVX: row[34],
+              };
+              newData.push(obj);
+            }, {});
+          }
+
+          return newData;
+        } catch (error) {
+          console.log(error);
+        }
+      }
+
+      // Function to synchronize data with MongoDB
+      async function synchronizeDataWithMongo(data, offset, limit) {
+        let inArraysSite = [];
+
+        data.forEach((element) => {
+          inArraysSite.push({
+            STOSITE: element.STOSITE,
+            Sales_Variant: element.Sales_Variant,
+          });
+        });
+
+        let deleteStocks = await itemMasterViewSchema.deleteMany({
+          $or: inArraysSite,
+        });
+
+        console.log(deleteStocks, "delete");
+        let insertStocks = await itemMasterViewSchema.insertMany(data);
         console.log(insertStocks.length, "insert lenght");
       }
 
