@@ -136,7 +136,7 @@ async function run() {
           await itemMasterUpdate(db, connection);
         };
 
-        cron.schedule("01 12 * * *", stockqtyFunctions);
+        cron.schedule("20 9 * * *", stockqtyFunctions);
         cron.schedule("22 8 * * *", poFunctions);
         cron.schedule("27 9 * * *", grnFunctions);
         cron.schedule("0 10 * * *", scheduledFunction);
