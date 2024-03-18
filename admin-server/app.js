@@ -141,10 +141,10 @@ async function run() {
         cron.schedule("45 9 * * *", grnFunctions);
         cron.schedule("0 10 * * *", scheduledFunction);
         cron.schedule("5 10 * * *", suppFunction);
-        cron.schedule("10 10 * * *", sparMsViewFunction);
+        cron.schedule("31 10 * * *", sparMsViewFunction);
         // cron.schedule("19 11 * * *", itemMasterViewFunction);
         // cron.schedule("34 9,12,15,18 * * *", stockqtyFunctionsDayChanges);
-        cron.schedule("23 11 * * *", slaViewFunction);
+        cron.schedule("27 12 * * *", slaViewFunction);
         //end
         console.log("Connected to MongoDB");
         require("./routes")(app, db);
@@ -716,12 +716,13 @@ async function run() {
         // Function to fetch data from Oracle with pagination
         async function fetchDataFromOracle(offset, limit) {
           try {
+            console.log("in query");
             const result = await connection.execute(
               `SELECT *
                FROM (
                  SELECT t.*, ROWNUM rnum
                  FROM (
-                  select * SPAR_PO_VS_GRN_SERVLVL_VIEWH
+                  select * FROM SPAR_PO_VS_GRN_SERVLVL_VIEWH
                  ) t
                  WHERE ROWNUM <= :limit + :offset
                )
