@@ -144,7 +144,7 @@ async function run() {
         cron.schedule("10 10 * * *", sparMsViewFunction);
         // cron.schedule("19 11 * * *", itemMasterViewFunction);
         // cron.schedule("34 9,12,15,18 * * *", stockqtyFunctionsDayChanges);
-        cron.schedule("50 9 * * *", slaViewFunction);
+        cron.schedule("23 11 * * *", slaViewFunction);
         //end
         console.log("Connected to MongoDB");
         require("./routes")(app, db);
@@ -693,7 +693,7 @@ async function run() {
         let newData = [];
 
         // Initialize offset and limit
-        let offset = 60002;
+        let offset = 0;
         const limit = 60000; // Adjust this value based on your memory constraints
 
         let hasMoreData = true;
@@ -793,6 +793,7 @@ async function run() {
 
         // Function to synchronize data with MongoDB
         async function synchronizeDataWithMongo(data) {
+          console.log(data.length, "length first in sla");
           let insertQuery = await slaViewSchema.insertMany(data);
           console.log(insertQuery.length);
         }
