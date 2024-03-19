@@ -136,14 +136,14 @@ async function run() {
           await itemMasterUpdate(db, connection);
         };
 
-        cron.schedule("37 11 * * *", stockqtyFunctions);
+        cron.schedule("30 5 * * *", stockqtyFunctions);
         cron.schedule("40 8 * * *", poFunctions);
         cron.schedule("10 9 * * *", grnFunctions);
         cron.schedule("30 9 * * *", scheduledFunction);
         cron.schedule("40 9 * * *", suppFunction);
         cron.schedule("55 9 * * *", sparMsViewFunction);
         cron.schedule("10 10 * * *", itemMasterViewFunction);
-        // cron.schedule("27 12 * * *", slaViewFunction);
+        cron.schedule("5 18 * * *", slaViewFunction);
         // cron.schedule("34 9,12,15,18 * * *", stockqtyFunctionsDayChanges);
         //end
         console.log("Connected to MongoDB");
@@ -693,7 +693,7 @@ async function run() {
         let newData = [];
 
         // Initialize offset and limit
-        let offset = 0;
+        let offset = 3060000;
         const limit = 60000; // Adjust this value based on your memory constraints
 
         let hasMoreData = true;
