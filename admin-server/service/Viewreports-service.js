@@ -413,7 +413,7 @@ module.exports = {
       let status = true;
 
       // Initialize offset and limit
-      let offset = 60000;
+      let offset = 0;
       const limit = 60000; // Adjust this value based on your memory constraints
 
       let hasMoreData = true;
@@ -499,6 +499,7 @@ module.exports = {
       // Function to synchronize data with MongoDB
       async function synchronizeDataWithMongo(data, offset, limit) {
         let insertQuery = await stockViewSchema.insertMany(data);
+        console.log("finished")
 
         //   console.log(offset, limit, "count and limit");
         //   let exisitingData = await stockViewSchema.aggregate([
