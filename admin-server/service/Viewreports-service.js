@@ -261,7 +261,7 @@ module.exports = {
 
       // Initialize offset and limit
       let offset = 0;
-      const limit = 20000; // Adjust this value based on your memory constraints
+      const limit = 60000; // Adjust this value based on your memory constraints
 
       let hasMoreData = true;
       while (hasMoreData) {
@@ -372,29 +372,29 @@ module.exports = {
           },
         ]);
 
-        if (exisitingData.length == 0) {
+        // if (exisitingData.length == 0) {
           let insertQuery = await grnDetailViewSchema.insertMany(data);
-        } else {
-          data.forEach(async (obj1) => {
-            const obj2 = exisitingData.find(
-              (item) =>
-                item.Po_No === obj1.Po_No && item.LINENO === obj1.LINENOc
-            );
+        // } else {
+        //   data.forEach(async (obj1) => {
+        //     const obj2 = exisitingData.find(
+        //       (item) =>
+        //         item.Po_No === obj1.Po_No && item.LINENO === obj1.LINENOc
+        //     );
 
-            if (obj2) {
-              const hasChanges = JSON.stringify(obj1) !== JSON.stringify(obj2);
-              if (hasChanges) {
-                await grnDetailViewSchema.updateOne(
-                  { Po_No: obj1.Po_No },
-                  { $set: obj1 }
-                );
-              } else {
-              }
-            } else {
-              await grnDetailViewSchema.create(obj1);
-            }
-          });
-        }
+        //     if (obj2) {
+        //       const hasChanges = JSON.stringify(obj1) !== JSON.stringify(obj2);
+        //       if (hasChanges) {
+        //         await grnDetailViewSchema.updateOne(
+        //           { Po_No: obj1.Po_No },
+        //           { $set: obj1 }
+        //         );
+        //       } else {
+        //       }
+        //     } else {
+        //       await grnDetailViewSchema.create(obj1);
+        //     }
+        //   });
+        // }
       }
 
       // synchronizeDataFromOracleToMongo();

@@ -122,9 +122,9 @@ async function run() {
         };
 
         const grnFunctions = async () => {
-          await grnFunction(db, connection);
+          // await grnFunction(db, connection);
           await grnDetailFunction(db, connection);
-          await grnFooterFunction();
+          // await grnFooterFunction();
         };
         const stockqtyFunctions = async () => {
           await stockqtyFunction(db, connection);
@@ -136,12 +136,12 @@ async function run() {
           await itemMasterUpdate(db, connection);
         };
 
-        cron.schedule("20 9 * * *", stockqtyFunctions);
-        cron.schedule("40 9 * * *", poFunctions);
-        cron.schedule("45 9 * * *", grnFunctions);
-        cron.schedule("0 10 * * *", scheduledFunction);
-        cron.schedule("5 10 * * *", suppFunction);
-        cron.schedule("31 10 * * *", sparMsViewFunction);
+        cron.schedule("24 10 * * *", stockqtyFunctions);
+        // cron.schedule("40 9 * * *", poFunctions);
+        cron.schedule("24 10 * * *", grnFunctions);
+        // cron.schedule("0 10 * * *", scheduledFunction);
+        // cron.schedule("5 10 * * *", suppFunction);
+        // cron.schedule("31 10 * * *", sparMsViewFunction);
         // cron.schedule("19 11 * * *", itemMasterViewFunction);
         // cron.schedule("34 9,12,15,18 * * *", stockqtyFunctionsDayChanges);
         // cron.schedule("27 12 * * *", slaViewFunction);
