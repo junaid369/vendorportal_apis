@@ -143,7 +143,7 @@ async function run() {
         cron.schedule("40 9 * * *", suppFunction);
         cron.schedule("55 9 * * *", sparMsViewFunction);
         cron.schedule("10 10 * * *", itemMasterViewFunction);
-        cron.schedule("5 18 * * *", slaViewFunction);
+        // cron.schedule("5 18 * * *", slaViewFunction);
         // cron.schedule("34 9,12,15,18 * * *", stockqtyFunctionsDayChanges);
         //end
         console.log("Connected to MongoDB");
