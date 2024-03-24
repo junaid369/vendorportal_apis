@@ -136,13 +136,13 @@ async function run() {
           await itemMasterUpdate(db, connection);
         };
 
-        cron.schedule("15 9 * * *", stockqtyFunctions);
+        cron.schedule("5 11 * * *", stockqtyFunctions);
         // cron.schedule("40 8 * * *", poFunctions);
-        cron.schedule("20 9 * * *", poFunctions);
-        cron.schedule("30 9 * * *", grnFunctions);
-        cron.schedule("40 9 * * *", scheduledFunction);
-        cron.schedule("50 9 * * *", suppFunction);
-        cron.schedule("55 9 * * *", sparMsViewFunction);
+        // cron.schedule("20 9 * * *", poFunctions);
+        // cron.schedule("30 9 * * *", grnFunctions);
+        // cron.schedule("40 9 * * *", scheduledFunction);
+        // cron.schedule("50 9 * * *", suppFunction);
+        // cron.schedule("55 9 * * *", sparMsViewFunction);
         // cron.schedule("10 10 * * *", itemMasterViewFunction);
         // cron.schedule("5 18 * * *", slaViewFunction);
         // cron.schedule("34 9,12,15,18 * * *", stockqtyFunctionsDayChanges);
