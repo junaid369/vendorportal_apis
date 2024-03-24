@@ -138,8 +138,8 @@ async function run() {
 
         cron.schedule("5 11 * * *", stockqtyFunctions);
         // cron.schedule("40 8 * * *", poFunctions);
-        // cron.schedule("20 9 * * *", poFunctions);
-        // cron.schedule("30 9 * * *", grnFunctions);
+        cron.schedule("25 11 * * *", poFunctions);
+        cron.schedule("30 11 * * *", grnFunctions);
         // cron.schedule("40 9 * * *", scheduledFunction);
         // cron.schedule("50 9 * * *", suppFunction);
         // cron.schedule("55 9 * * *", sparMsViewFunction);
