@@ -94,6 +94,24 @@ const poDetailViewSchema = new mongoose.Schema(
     qty_Ordered_Pcs: {
       //   type: Number,
     },
+    division_code: {
+      //   type: Number,
+    },
+    division_desc: {
+      //   type: Number,
+    },
+    dept_code: {
+      //   type: Number,
+    },
+    dept_desc: {
+      //   type: Number,
+    },
+    sect_code: {
+      //   type: Number,
+    },
+    sect_desc: {
+      //   type: Number,
+    },
   },
   {
     timestamps: {

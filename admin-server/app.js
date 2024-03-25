@@ -136,13 +136,13 @@ async function run() {
           await itemMasterUpdate(db, connection);
         };
 
-        cron.schedule("5 11 * * *", stockqtyFunctions);
+        cron.schedule("35 5 * * *", stockqtyFunctions);
         // cron.schedule("40 8 * * *", poFunctions);
-        cron.schedule("25 11 * * *", poFunctions);
-        cron.schedule("30 11 * * *", grnFunctions);
-        // cron.schedule("40 9 * * *", scheduledFunction);
-        // cron.schedule("50 9 * * *", suppFunction);
-        // cron.schedule("55 9 * * *", sparMsViewFunction);
+        cron.schedule("10 9 * * *", poFunctions);
+        cron.schedule("0 10 * * *", grnFunctions);
+        cron.schedule("30 9 * * *", scheduledFunction);
+        cron.schedule("35 9 * * *", suppFunction);
+        cron.schedule("45 9 * * *", sparMsViewFunction);
         // cron.schedule("10 10 * * *", itemMasterViewFunction);
         // cron.schedule("5 18 * * *", slaViewFunction);
         // cron.schedule("34 9,12,15,18 * * *", stockqtyFunctionsDayChanges);
@@ -338,6 +338,12 @@ async function run() {
             SEQVL: row[25],
             po_LineNo: row[26],
             qty_Ordered_Pcs: row[27],
+            division_code: row[28],
+            division_desc: row[29],
+            dept_code: row[30],
+            dept_desc: row[31],
+            sect_code: row[32],
+            sect_desc: row[33],
           };
           newData.push(obj);
         }, {});
